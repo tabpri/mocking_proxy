@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .b94620ae-6429-43dd-97a3-5693b3460278 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>icn-code_save-project</title>
+  <g id="c9ed45e2-05ce-4d16-8862-0312ee144b5f" data-name="レイヤー 2">
+    <g id="2cf87b9e-3c64-4902-adc1-bc83e38103a9" data-name="レイヤー 1">
+      <g id="e0820c15-a736-4ce5-be12-3f58223fec10" data-name="codeアイコン">
+        <g id="3c08ac4c-ed72-4f04-940a-260b3903f398" data-name="icn-code_save">
+          <path d="M290,271h0a18.05,18.05,0,0,1-18,18H28a18.06,18.06,0,0,1-18-18h0V237a18.06,18.06,0,0,1,18-18h0a18,18,0,0,1,18,18v16H254V237a18.06,18.06,0,0,1,18-18h0a18,18,0,0,1,18,18ZM210,149.57v-37.9a5.73,5.73,0,0,0-6-5.67H156V68.35a30,30,0,1,0-12,0V106H96a5.73,5.73,0,0,0-6,5.67v37.9a30,30,0,1,0,12,0V118h96v31.57a30,30,0,1,0,12,0Z"/>
+          <rect class="b94620ae-6429-43dd-97a3-5693b3460278" width="300" height="300"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

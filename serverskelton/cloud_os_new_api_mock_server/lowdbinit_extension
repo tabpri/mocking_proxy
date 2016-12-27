@@ -1,0 +1,26 @@
+const low = require('lowdb')
+const db = low('db.json')
+
+db.defaults({ Extensions: [] }).value()
+db.get('Extensions').push({ id: 1,
+  ID: '1',
+  CreatedAt: '1',
+  UpdatedAt: '1',
+  DeletedAt: '1',
+  IsEnabled: '1',
+  IsReleased: '1',
+  IsCataloged: '1',
+  IsLicenseFree: '1',
+  OwnerGroupID: '1',
+  OwnerID: '1',
+  DisplayOwnerGroupName: '1',
+  DisplayOwnerName: '1',
+  AppID: '1',
+  Name: '1',
+  NameEn: '1',
+  Description: '1',
+  DescriptionEn: '1',
+  ImagePath: '1',
+  ExtensionFilePath: '1',
+  Hash: '1',
+}).value()

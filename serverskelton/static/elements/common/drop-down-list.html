@@ -1,0 +1,67 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<link rel="import" href="/static/elements/common/drop-down.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+<dom-module id="drop-down-list">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            :host {
+                position: relative;
+            }
+            
+            drop-down {
+                width: 100%;
+                height: 100%;
+            }
+            
+            :host ::content .iron-selected {
+                background-color: var(--code-color-active);
+                color: var(--code-color-font-whitefog);
+            }
+            
+        </style>
+        <drop-down
+            vertical-align="[[verticalAlign]]"
+            horizontal-align="[[horizontalAlign]]"
+            disabled="[[disabled]]"
+            no-scroll$="[[noscroll]]">
+            <content select=".dropdown-trigger"></content>
+            <array-selector id="selector" items="{{items}}" selected="{{selectedItem}}"></array-selector>
+            <iron-selector selected="{{selectedItem}}" attr-for-selected="item">
+                <content></content>
+            </iron-selector>
+        </drop-down>
+    </template>
+    <script>
+        Polymer({
+            is: 'drop-down-list',
+                properties: {
+                verticalAlign: String,
+                horizontalAlign: String,
+                disabled: Boolean,
+                items: {
+                    type: Array,
+                    notify: true,
+                    value: function () {
+                        return [];
+                    }
+                },
+                selectedItem: {
+                    type: Object,
+                    notify: true,
+                    value: function () {
+                        return {};
+                    }
+                },
+                sort: {
+                    type: Function,
+                    value: function () {
+                        return true;
+                    }
+                },
+            },
+        });
+    </script>
+</dom-module>

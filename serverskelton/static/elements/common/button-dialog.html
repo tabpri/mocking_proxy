@@ -1,0 +1,113 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/elements/common/common-dialog.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+
+<dom-module id="button-dialog">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            common-dialog {
+                --base-dialog-body: {
+                    min-height: 62px;
+                    max-height: 402px;
+                }
+            }
+            
+            .dialog-body-bottom {
+                padding: 10px 20px 10px 20px;
+            }
+            
+            .buttonArea,
+            :host ::content .buttonArea {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+            }
+            
+            .buttonArea common-button,
+            :host ::content .buttonArea common-button{
+                margin-left: 15px;
+            }
+            
+            [vanish] {
+                display: none;
+            }
+            
+        </style>
+        
+        <common-dialog id="dialog">
+            <content select=".dialog-title-left"></content>
+            <content select=".dialog-title"></content>
+            <content select=".dialog-body-top"></content>
+            <content select=".dialog-body" ></content>
+            <div class="dialog-body-bottom">
+
+                <div class="buttonArea" vanish$="[[!_buttons.length]]">
+                    <template is="dom-repeat" items="{{_buttons}}">
+                        <common-button size="B" type="[[item.type]]" on-tap="_callback">[[item.label]]</common-button>
+                    </template>
+                </div>
+                <content select=".buttonArea"></content>
+            </div>
+        </common-dialog>
+        
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "button-dialog",
+                properties: {
+                    _buttons: {
+                        type: Array,
+                        value: function () {return [];},
+                    },
+                },
+                setButtons: function (buttons) {
+                    this._buttons = buttons;
+                },
+                open: function () {
+                    console.log("mark 300 button dialog")
+                    var self = this;
+                    console.log("mark 301 button dialog")
+
+                    this._buttons.forEach(function (button) {
+                        console.log("mark 301 button dialog")
+                        if(typeof button.type == "string" && button.type == "cancel"){
+                            if(typeof button.callback == "function"){
+                                console.log("mark 304 button dialog")
+
+                                self.$.dialog.setCallbackClose(button.callback);
+                                console.log("mark 304-2 button dialog")
+
+                            }
+                            console.log("mark 303 button dialog")
+
+                        }
+                    });
+                    this.$.dialog.open();
+                    console.log("mark 300 button dialog ends ")
+                },
+                close: function () {
+                    this.$.dialog.close();
+                },
+                _callback: function (e) {
+                    var button = e.model.item;
+                    if (typeof button.callback == "function"){
+                        button.callback();
+                    }
+                },
+                _classButtonType: function(type) {
+                    return 'button ' + type;
+                }
+            });
+
+        }());
+    </script>
+</dom-module>

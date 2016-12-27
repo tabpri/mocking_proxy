@@ -1,0 +1,169 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/pushstate-anchor/pushstate-anchor.html">
+<link rel="import" href="/static/css/app-styles.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="navigation-bar">
+    <template>
+        <style include="app-styles"></style>
+        <style>
+            :host {
+                @apply(--layout-vertical);
+            }
+
+            .navigation {
+/*                height: var(--size-navigation-bar-heigth);*/
+                height: 20px;
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+                background-color: var(--color-bg-color-pale-white);
+            }
+
+            .page_title {
+                height: 36px;
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+                background-color: var(--color-bg-color-white);
+                font-size: var(--size-font-largest);
+                line-height: var(--size-font-largest);
+                color: var(--color-font-black);
+            }
+            
+            .back {
+                color: var(--color-font-gray);
+                cursor: pointer;
+            }
+            
+            .backIcon {
+                margin-top: 3px;
+            }
+            
+            .space {
+                margin-left: 10px;
+            }
+
+            .delim {
+                margin-left: 5px;
+                margin-right: 5px;
+            }
+            
+            .labels {
+                line-height: var(--size-font-smallest);
+                font-size: var(--size-font-smallest);
+                @apply(--layout-horizontal);
+                color: var(--color-font-light-black);
+            }
+            
+            .labels > .separator {
+                color: var(--color-font-black);
+                width: var(--size-font-smallest);
+                height: var(--size-font-smallest);
+                margin-left: 5px;
+                margin-right: 5px;
+            }
+            
+            .labels > .separator:last-of-type {
+                display: none;
+            }
+
+            .bread {
+                @apply(--layout-horizontal);
+                position: relative;
+            }
+
+            .bread_key {
+                @apply(--layout-horizontal);
+                position: relative;
+            }
+            .mark {
+                font-size: var(--size-font-smallest);
+/*
+                background-color: var(--color-theme-app-light);
+                border-radius: 3px;
+                padding: 0px 5px;
+*/
+            }
+            .bread_key > .space {
+                @apply(--layout-flex);
+                width: 100%;
+            }
+            
+            .nokey {
+                @apply(--layout-flex);
+                margin-top: 10px;
+            }
+        </style>
+
+        <template is="dom-if" if="{{labels}}">
+            <div class="navigation">
+
+                <div class="space"></div>
+
+                <div class="labels">
+                    <template is="dom-repeat" items="{{labels}}">
+                        <template is="dom-if" if="{{item.value}}">
+                            <div class="bread">
+                                <template is="dom-if" if="{{item.key}}">
+                                    <div class="bread_key">
+                                        <div class="mark">{{item.key}}</div>
+                                        <div class="delim">:</div>
+                                    </div>
+                                    <div class="label">{{item.value}}</div>
+                                </template>
+
+                                <template is="dom-if" if="{{!item.key}}">
+                                    <div class="label nokey">{{item.value}}</div>
+                                </template>
+                            </div>
+                            <ajax-img class="separator" src="/static/app/img/icn-arrow2_next.svg"></ajax-img>
+                        </template>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <div class="page_title">
+            
+            <div class="space"></div>
+
+            <template is="dom-if" if="{{!noback}}">
+                <div class="back">
+                    <a is="pushstate-anchor" href="{{backUrl}}">
+                        <ajax-img class="backIcon" src="/static/app/img/icn-arrow2_back.svg"></ajax-img>
+                    </a>
+                </div>
+                <div class="space"></div>
+            </template>
+
+            {{pageTitle}}
+
+        </div>
+        
+    </template>
+
+    <script>
+        (function() {
+            Polymer({
+                is: "navigation-bar",
+                properties: {
+                    noback: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    labels: {
+                        type: Array,
+                    },
+                    pageTitle: {
+                        type: String,
+                    }
+                },
+                setTitle : function() {
+                    if ((this.labels) && (this.labels.length > 0)) {
+                        var title = this.labels[this.labels.length - 1];
+                        this.pageTitle = title.key + " : " + title.value;
+                    }
+                },
+            });
+        }());
+    </script>
+</dom-module>

@@ -1,0 +1,73 @@
+@import url(//fonts.googleapis.com/earlyaccess/notosansjapanese.css);
+
+*, *::before, *::after {
+    cursor: inherit;
+    outline: inherit;
+    -webkit-tap-highlight-color: inherit;
+}
+
+input {
+    cursor: text;
+}
+input[type=text] {
+    height: 24px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border: solid 1px #CCCCCC;
+    font-family: 'Noto Sans Japanese', serif;
+}
+
+textarea {
+    cursor: text;
+    resize: none;
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 5px;
+    border: solid 1px #CCCCCC;
+    font-family: 'Noto Sans Japanese', serif;
+}
+
+.cursor-pointer{
+    cursor: pointer;
+    cursor: hand;
+}
+
+.paper-slider{
+    cursor: pointer;
+    cursor: hand;
+}
+
+term-ui{
+    cursor: text;
+}
+
+a {
+    color: inherit;
+    text-decoration: inherit;
+    cursor: pointer;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    color: #000;
+    line-height: 1.4;
+    font-size: 12px;
+    font-family: 'Noto Sans Japanese', serif;
+    background-color: #fff;
+    padding: 0;
+    margin: 0;
+    cursor: default;
+    outline: none;
+    overflow: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+ajax-img {
+    display: block;
+}

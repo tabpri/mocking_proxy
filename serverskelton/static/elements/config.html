@@ -1,0 +1,25 @@
+<script>
+    const config = {
+        "code_api_wshost": "wss://geranium-code-api.optim-test.com",
+        "codeApiUrl": "http://localhost:12312",
+//        "origins": {
+//            "https://geranium-code-api.optim-test.com": [
+//                '/projects*',
+//                '/containers*',
+//                '/images*',
+//            ]
+//        },
+        "cloud_runtime": {
+            "artifact": {
+                "validate": {
+                    "mem_step": 1,
+                    "mem_min": 1,
+                    "mem_max": 2024,
+                    "cpu_step": 1,
+                    "cpu_min": 1,
+                    "cpu_max": 100,
+                },
+            },
+        },
+    };
+</script>

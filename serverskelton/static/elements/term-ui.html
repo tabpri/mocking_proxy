@@ -1,0 +1,60 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<script src="/static/libs/term.js"></script>
+
+<dom-module id="term-ui">
+    <style>
+        .term {
+            height: 370px;
+            background-color: #000000;
+        }
+    </style>
+
+    <template>
+        <div id="term" class="term"></div>
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "term-ui",
+                properties: {
+                    websocket_url: {
+                        type: String,
+                        observer: "connect",
+                        notify: true
+                    }
+                },
+                connect: function (websocket_url) {
+                    console.log(websocket_url);
+                    if (this._ws != null) {
+                        this._ws.close();
+                        this._ws = undefined;
+                        this._terminal.destroy();
+                    }
+                    var term = new Terminal({
+                        screenKeys: true,
+                        cursorBlink: true,
+                        useStyle: true,
+                    });
+                    term.open(this.$.term);
+                    this._terminal = term;
+                    this._terminal.on('data', function (e) {
+                        this._ws.send(e);
+                    }.bind(this));
+
+                    this._ws = codeApi.websocket(this.websocket_url, {}).on('message', function(e) {
+                        this._terminal.write(e.data);
+                    }.bind(this));
+
+//                    this._ws = new WebSocket(this.websocket_url + "?token=" + api.eval.token);
+//                    this._ws.onmessage = function (e) {
+//                        this._terminal.write(e.data);
+//                    }.bind(this);
+                }
+            });
+
+        }());
+    </script>
+</dom-module>

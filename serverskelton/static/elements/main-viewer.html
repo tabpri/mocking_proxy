@@ -1,0 +1,172 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/static/bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+
+<link rel="import" href="/static/elements/code-menu.html">
+<link rel="import" href="/static/elements/code-viewer.html">
+<link rel="import" href="/static/elements/common/app-router-controller.html">
+<!--<link rel="import" href="/static/elements/project-viewer.html">-->
+<link rel="import" href="/static/elements/task-runner.html">
+<link rel="import" href="/static/elements/artifact-viewer.html">
+<link rel="import" href="/static/elements/term-viewer.html">
+<link rel="import" href="/static/elements/extension-viewer.html">
+<link rel="import" href="/static/elements/code-viewer-debug-editor.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<link rel="import" href="/static/css/app-styles.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+
+
+<dom-module id="main-viewer">
+    <template>
+        <style include="app-styles"></style>
+
+        <style>
+            :host {
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+                @apply(--layout-flex-auto);
+                z-index: 1;
+            }
+            /*#routes {*/
+                /*display: flex;*/
+                /*flex:1;*/
+            /*}*/
+            /*.app-routes{*/
+                /*display: flex;*/
+            /*}*/
+
+            .container {
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+                -webkit-align-items: stretch;
+                align-items: stretch;
+                @apply(--layout-flex-auto);
+                position: relative;
+            }
+
+
+            .tools {
+                border-right: solid 1px #000000;
+            }
+
+            input {
+                display: none;
+            }
+
+            input + .content {
+                display: none;
+            }
+
+            input + .content2 {
+                display: none;
+            }
+
+            :checked + .content {
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+                @apply(--layout-flex-auto);
+            }
+
+            .main {
+                -webkit-align-items: stretch;
+                align-items: stretch;
+                @apply(--layout-vertical);
+                @apply(--layout-flex-auto);
+                @apply(--layout-flex);
+                overflow: auto;
+            }
+
+            code-menu {
+                border-bottom: solid 1px var(--code-color-border-code-menu);
+            }
+
+            code-viewer-debug-editor {
+                z-index: 2;
+            }
+        </style>
+        <app-router-controller id="controller" routesid="routes" scope="iot-code"></app-router-controller>
+        <div class="mainView">
+            <app-router id="routes" trailingslash="ignore" mode="pushstate" on-state-change="_onStateChange">
+                <app-route class="app-routes" path="/" redirect="/projects"></app-route>
+                <app-route class="app-routes"  path="/projects" import="/static/elements/project-viewer.html"></app-route>
+                <app-route  class="app-routes" path="/projects/:project_id" import="/static/elements/code-viewer.html"></app-route>
+                <app-route  class="app-routes" path="/projects/:project_id/delete" import="/static/elements/delete-project.html"></app-route>
+                <app-route  class="app-routes" path="/projects/:project_id/artifacts" import="/static/elements/artifact-viewer.html"></app-route>
+            </app-router>
+        </div>
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "main-viewer",
+                properties: {
+                    projects: {
+                        type: Object,
+                        notify: true,
+                    },
+                    currentProject: {
+                        type: Object,
+                        notify: true,
+                        value: function () {return {}}
+                    },
+                    task: {
+                        type: Object,
+                        notify: true,
+                        //observer: "runTask",
+                    },
+                    tasks: {
+                        type: Object,
+                        notify: true,
+                    },
+                    tabList: {
+                        type: Array,
+                        notify: true,
+                    },
+                    files: {
+                        type: Array,
+                        value: [],
+                    },
+                    selectItem: {
+                        type: Object,
+                        notify: true,
+                        value: function () {return {hasUndo: false, hasRedo: false}}
+                    },
+                    opendebugeditor: {
+                        type: Boolean,
+                        value: false,
+                    }
+                },
+                attached: function() {
+//                    history.pushState(null, null, "/project/8pT2o5Qs3EQAJM2L7rQSbEgIqh3Mj3TghklkWMKz5n2wmWU6bTTTHKwf81mtVuwx")
+                    this.listen(window, 'go', 'go');
+//                    this.$.routes.go(url)
+                    this.$.controller.router = this.$.routes;
+
+
+                },
+                detached: function() {
+                        this.unlisten(window, 'debug-editor', 'openDebugEditor');
+                },
+                _onStateChange:function(){
+//
+                    console.log("on state change called");
+                },
+                go: function(e, detail){
+                    var url = detail;
+                    console.log("go function called")
+                    console.log(e)
+                    console.log(detail)
+//                    history.pushState(null, null, url)
+                    this.$.routes.go(url)
+
+                }
+            });
+
+        }());
+    </script>
+</dom-module>

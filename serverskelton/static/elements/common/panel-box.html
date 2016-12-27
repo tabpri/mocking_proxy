@@ -1,0 +1,83 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<dom-module id="panel-box">
+    <template>
+        <style>
+            :host > .main {
+                background-color: var(--code-color-panel-background-body);
+                color: var(--code-color-font-black);
+                border: 1px solid var(--code-color-border);
+                @apply(--panel-box-main-style);
+            }
+
+            :host > .main > .title {
+                background-color: var(--code-color-panel-background-title);
+                color: var(--code-color-font-black);
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+                font-size: 14px;
+                height: 28px;
+                padding-left: 15px;
+                line-height: 28px;
+                @apply(--panel-box-title-style);
+            }
+            
+            :host > .main > .body {
+                padding: 10px 15px 15px 15px;
+                @apply(--panel-box-body-style);
+            }
+            
+            :host > .main > .body-bottom {
+                @apply(--panel-box-body-bottom-style);
+            }
+
+            :host ::content .panel-box-fieldset {
+                margin-bottom: 15px;
+            }
+
+            :host ::content .panel-box-fieldset:last-child {
+                margin-bottom: 0px;
+            }
+
+            :host ::content .panel-box-field {
+                @apply(--layout-vertical);
+            }
+
+            :host ::content .panel-box-field.oneline {
+                margin-left: 10px;
+                height: 12px;
+                line-height: 12px;
+            }
+
+            :host ::content .panel-box-field.multiline {
+                margin-left: 10px;
+                line-height: 15.2px;
+                word-break: break-all;
+            }
+
+            :host ::content .panel-box-legend {
+                color: var(--code-color-font-thingray);
+                height: 12px;
+                line-height: 12px;
+                margin-bottom: 10px;
+            }
+        </style>
+        
+        <div class="main">
+            <div class="title"><content select=".p_title"></content></div>
+            <div class="body"><content select=".p_body"></content></div>
+            <div class="body-bottom"><content select=".p_body-bottom"></content></div>
+        </div>
+        
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "panel-box",
+            });
+
+        }());
+    </script>
+</dom-module>

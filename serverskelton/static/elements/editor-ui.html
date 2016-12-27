@@ -1,0 +1,290 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="/static/elements/common/button-dialog.html">
+
+<script src="/static/libs/ace/ace.js"></script>
+<script type="text/javascript" src="/static/libs/ace/mode-golang.js"></script>
+<script type="text/javascript" src="/static/libs/ace/mode-python.js"></script>
+<script type="text/javascript" src="/static/libs/ace/mode-javascript.js"></script>
+<script src="/static/libs/ace/ext-language_tools.js"></script>
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="editor-ui">
+    <template>
+        <style>
+            :host {
+                @apply(--layout-vertical);
+                z-index: 1;
+            }
+
+/*
+            .buttons {
+                @apply(--layout-horizontal);
+            }
+*/
+
+            .editor {
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+            }
+
+            #editor {
+                @apply(--layout-flex-auto);
+            }
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+
+        <button-dialog id="daialog">
+            <div class="dialog-title">{{resource.delete}}</div>
+            <div class="dialog-body">
+                <p>[[_daialogMessage]]</p>
+            </div>
+        </button-dialog>
+        
+        <div class="editor">
+            <div id="editor"></div>
+        </div>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "editor-ui",
+                properties: {
+                    filename: {
+                        type: String,
+                        notify: true,
+                    },
+                    containerId: {
+                        type: String,
+                    },
+                    hasUndo: {
+                        type: Boolean,
+                        notify: true,
+                        value: false,
+                    },
+                    hasRedo: {
+                        type: Boolean,
+                        notify: true,
+                        value: false,
+                    },
+                    focus: {
+                        type: Boolean,
+                        value: false,
+                        reflectToAttribute: true,
+                        notify: true,
+                        observer: '_focusChanged'
+                    },
+                    element: {
+                        type: Object,
+                        notify: true,
+                        value: function () {
+                            return this;
+                        },
+                        readOnly: true,
+                    }
+                },
+                observers: ["_viewInit(filename,containerId, _editor)"],
+                attached: function() {
+                    this.listen(document.body, "focus-editor", "_focusEditor");
+                    this.listen(document.body, "resize-editor", "_resizeEditor");
+                },
+                ready: function () {
+                    var editor = ace.edit(this.$$("#editor"));
+                    editor.setTheme("ace/theme/dawn");
+                    editor.$blockScrolling = Infinity;
+                    editor.setOptions({
+                        enableBasicAutocompletion: true,
+                        enableSnippets: true,
+                        enableLiveAutocompletion: true
+                    });
+                    self = this;
+                    editor.commands.addCommand({
+                        Name: "savefile",
+                        bindKey: {
+                            win: "Ctrl-S",
+                            mac: "Command-S",
+//                            sender: 'editor|cli',
+                        },
+                        exec: function (editor) {
+                            console.log("mark exec: function (editor) {")
+                            this.fire('saveFile');
+
+//                            self.save();
+                        }
+                    });
+                    this._editor = editor;
+                },
+                detached: function() {
+                    this.unlisten(document.body, "focus-editor", "_focusEditor");
+                    this.unlisten(document.body, "resize-editor", "_resizeEditor");
+                },
+                _viewInit: function (filename, containerId, editor) {
+                    //editor.setValue(containerId + "," + filename, -1);
+                    codeApi.get("/containers/:container_id/path/:path", {
+                        params: {
+                            container_id: containerId,
+                            path: filename.split("/").slice(1).join("/"),
+                        }
+                    }).then(function (data) {
+                        console.log(filename);
+                        ext = filename.split(".");
+                        ext = ext[ext.length - 1];
+                        if (ext == "py") {
+                            editor.getSession().setMode("ace/mode/python");
+                        } else if (ext == "go") {
+                            editor.getSession().setMode("ace/mode/golang");
+                        } else if (ext == "js") {
+                            editor.getSession().setMode("ace/mode/javascript");
+                        }
+                        editor.setValue(decodeURIComponent(window.atob(data.res.base64)));
+                        editor.session.setUndoManager(new ace.UndoManager())
+                        editor.on("input", function() {
+                            this.hasUndo = editor.session.getUndoManager().hasUndo();
+                            this.hasRedo = editor.session.getUndoManager().hasRedo();
+                        }.bind(this));
+                        this.hasUndo = editor.session.getUndoManager().hasUndo();
+                        this.hasRedo = editor.session.getUndoManager().hasRedo();
+                        editor.gotoLine(0);
+                        this._editorWidth = this.$.editor.offsetWidth;
+                        this._editorHeight = this.$.editor.offsetHeight;
+                    }.bind(this)).catch(function (e) {
+                        //console.log(e);
+                    }.bind(this));
+                },
+                _focusChanged: function (val) {
+                    if (val) {
+                        this._editor.focus();
+
+
+                        this._editor.commands.addCommand({
+                            Name: "savefile",
+                            bindKey: {
+                                win: "Ctrl-S",
+                                mac: "Command-S",
+//                            sender: 'editor|cli',
+                            },
+                            exec: function (editor) {
+                                this.fire('saveFile');
+                                console.log("save" + editor.filename);
+//                                self.save();
+                            }.bind(this)
+                        });
+
+
+                    }
+                },
+                _focusEditor: function () {
+                    if (this.focus) {
+                        this._editor.focus();
+                    }
+
+                },
+                _resizeEditor: function () {
+                    if (this.focus) {
+                        if( this._editorWidth != this.$.editor.offsetWidth || this._editorHeight != this.$.editor.offsetHeight){
+                            this._editor.resize();
+                            this._editorWidth = this.$.editor.offsetWidth;
+                            this._editorHeight = this.$.editor.offsetHeight;
+                            console.log("resize " + this.filename + " _editorWidth " + this._editorWidth + " _editorHeight " + this._editorHeight);
+                        }
+                    }
+                },
+                save: function (callbackSuccess) {
+                    var code = this._editor.getValue();
+                    var containerId = this.containerId;
+                    var filename = this.filename.split("/").slice(1).join("/");
+                    console.log("mark filename")
+                    console.log(filename)
+
+                    codeApi.post("/containers/:container_id/path/:filename", {
+                        params: {
+                            container_id: containerId,
+                            filename: filename,
+                        },
+                        body: {
+                            base64: window.btoa(encodeURIComponent(code)),
+                            is_file: true,
+                        },
+                        responseType: 'text'
+                    }).then(function () {
+                        this._resetHasUndo();
+                        if (typeof callbackSuccess == "function"){
+                            callbackSuccess();
+                        };
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                    }.bind(this));
+                },
+                redo: function () {
+                    this._editor.redo();
+                },
+                undo: function () {
+                    this._editor.undo();
+                },
+                find: function () {
+                    this._editor.execCommand("find");
+                },
+                replace: function () {
+                    this._editor.execCommand("replace");
+                },
+                debug: function () {
+                    this.fire('debug-drawer', {request: 'open'});
+                },
+                close: function (callback) {
+                    if(this.hasUndo){
+                        var self = this;
+                        self._daialogMessage = this.resource.want_to_save_the_changes;
+                        var buttons = [
+                            {
+                                label: "Cancel",
+                                type: "cancel",
+                                callback: function () {
+                                    self.$.daialog.close();
+                                },
+                            },
+                            {
+                                label: "NO",
+                                type: "accept",
+                                callback: function () {
+                                    self._resetHasUndo();
+                                    if (typeof callback == "function"){
+                                        callback();
+                                    };
+                                    self.$.daialog.close();
+                                },
+                            },
+                            {
+                                label: "OK",
+                                type: "accept",
+                                callback: function () {
+                                    self.save( function () {
+                                        if (typeof callback == "function"){
+                                            callback();
+                                        };
+                                        self.$.daialog.close();
+                                    });
+                                },
+                            }
+                        ]
+                        this.$.daialog.setButtons(buttons);
+                        this.$.daialog.open();
+                    }else{
+                        if (typeof callback == "function"){
+                            callback();
+                        };
+                    }
+                },
+                _resetHasUndo: function () {
+                    var editor = this._editor;
+                    editor.session.setUndoManager(new ace.UndoManager())
+                    this.hasUndo = editor.session.getUndoManager().hasUndo();
+                    this.hasRedo = editor.session.getUndoManager().hasRedo();
+                }
+            });
+
+        }());
+    </script>
+</dom-module>

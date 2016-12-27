@@ -1,0 +1,148 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+
+<link rel="import" href="/static/elements/project-tree.html">
+<link rel="import" href="/static/elements/edit-project-dialog.html">
+<link rel="import" href="/static/elements/commit-image-dialog.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/drop-down.html">
+<link rel="import" href="/static/elements/common/drop-down-list.html">
+
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+
+<dom-module id="left-panel">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            :host {
+                @apply(--layout-vertical);
+                width: 200px;
+
+                color: var(--code-color-font-white);
+                border-right: 1px solid var(--code-color-border);
+                height: 100%;
+                flex-direction:column;
+                align-content: stretch;
+            }
+
+
+            .projectLabel {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+
+
+
+
+            .projectMenu {
+                margin-left: 10px;
+                visibility: hidden;
+            }
+
+            .projectMenu .dropdown-trigger {
+                width: 16px;
+                height: 16px;
+            }
+
+            .projectMenu .dropdown-content {
+                padding: 10px;
+            }
+
+            .projectMenu .dropdown-content div {
+                margin-bottom: 15px;
+            }
+
+            .projectMenu .dropdown-content div:last-child {
+                margin-bottom: 0px;
+            }
+
+            .projectTree {
+                @apply(--layout-flex);
+                background-color: var(--code-color-list-base);
+                color: var(--code-color-font-gray);
+                overflow-y: auto;
+            }
+
+            [show] {
+                display: block;
+                visibility: visible;
+            }
+        </style>
+
+
+
+        <!--<div class="menuPanel">-->
+            <!--<div class="projectTypeIcons" show$="[[currentProject]]">-->
+                <!--<ajax-img class="projectTypeIcon icon-s" src="/static/img/icn-global_lambda.svg" show$="{{_eq(currentProject.type, _CONST.PROJECT_TYPE.LAMBDA)}}"></ajax-img>-->
+                <!--<ajax-img class="projectTypeIcon icon-s" src="/static/img/icn-global_extension.svg" show$="{{_eq(currentProject.type, _CONST.PROJECT_TYPE.EXTENSION)}}"></ajax-img>-->
+            <!--</div>-->
+            <!--<flex-label>{{currentProject.name}}</flex-label>-->
+            <!--&lt;!&ndash;<drop-down-list class="projectList" items="{{projects}}" selected-item="{{_selectItemProject}}" vertical-align="top" horizontal-align="left">&ndash;&gt;-->
+                <!--&lt;!&ndash;<div class="dropdown-trigger projectLabel cursor-pointer">&ndash;&gt;-->
+                    <!--&lt;!&ndash;<flex-label>{{currentProject.name}}</flex-label>&ndash;&gt;-->
+                    <!--&lt;!&ndash;<ajax-img class="icon-s" src="/static/img/icn-arrow4_down.svg"></ajax-img>&ndash;&gt;-->
+                <!--&lt;!&ndash;</div>&ndash;&gt;-->
+                <!--&lt;!&ndash;&lt;!&ndash;<div class="projectName">{{item.name}}</div>&ndash;&gt;&ndash;&gt;-->
+            <!--&lt;!&ndash;</drop-down-list>&ndash;&gt;-->
+            <!--&lt;!&ndash;<drop-down class="projectMenu" vertical-align="top" horizontal-align="left" show$="[[currentProject.id]]">&ndash;&gt;-->
+                <!--&lt;!&ndash;<ajax-img class="icon-s dropdown-trigger cursor-pointer" src="/static/img/icn-global_option.svg"></ajax-img>&ndash;&gt;-->
+            <!--&lt;!&ndash;</drop-down>&ndash;&gt;-->
+        <!--</div>-->
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "left-panel",
+                properties: {
+                    projects: {
+                        type: Object,
+                        notify: true,
+                    },
+                    currentProject: {
+                        type: Object,
+                        notify: true,
+                        value: function () {return {}}
+                    },
+                    selectItem: {
+                        type: Object,
+                        notify: true,
+                        value: function () {return {hasUndo: false, hasRedo: false}}
+                    },
+                    projectsIsEmpty: {
+                        type: Boolean,
+                        computed: '_computeEmpty(projects.*)'
+                    },
+                    _CONST: {
+                        type: Object,
+                        value: CONST,
+                        readOnly: true,
+                    }
+                },
+                ready: function () {
+                    this.commitButtonHidden = true;
+                },
+                attached: function() {
+                    this.listen(window, 'openProject', '_openProjectListener');
+                },
+                detached: function() {
+                    this.unlisten(window, 'openProject', '_openProjectListener');
+                },
+                _computeEmpty: function() {
+                    return this.projects.length == 0;
+                },
+
+
+                _eq: function(a, b) {
+                    return a == b;
+                }
+            });
+
+        }());
+    </script>
+</dom-module>

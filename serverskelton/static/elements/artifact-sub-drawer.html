@@ -1,0 +1,388 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/drawer-panel.html">
+<link rel="import" href="/static/elements/common/panel-box.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<link rel="import" href="/static/elements/edit-operation-dialog.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+<dom-module id="artifact-sub-drawer">
+    <style include="base-styles"></style>
+    <style>
+        :host {
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 500px;
+        }
+        
+        .modal_screen {
+            position: fixed;
+/*            z-index: 2000;*/
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            background-color: #000;
+            opacity: 0.6;
+        }
+
+        .listItem {
+            padding-left: 10px;
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+            height: 30px;
+            border-bottom: 1px solid var(--code-color-border);
+            border-left: 1px solid var(--code-color-border);
+            border-right: 1px solid var(--code-color-border);
+        }
+
+        .processes_list > .listItem:first-child {
+            margin-top: 3px;
+            border: 1px solid var(--code-color-border);
+        }
+
+        .listItem label {
+            @apply(--layout-flex);
+            @apply(--layout-horizontal);
+            height: 100%;
+        }
+
+        .listItem.iron-selected {
+            background-color: #cce4e6;
+        }
+
+        .listItem ajax-img {
+            margin-left: auto;
+            margin-right: 10px;
+        }
+        
+        .menu_bar common-button {
+            margin: 10px 20px 10px auto;
+            width: 110px;
+            height: 30px;
+            line-height: 30px;
+            padding: 0px;
+            text-align: center;
+            background-color:  #0071BC;
+            color: var(--code-color-font-white);
+        }
+
+        .d_header_title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .d_header_left > ajax-img {
+            margin-top: 3px;
+            margin-right: -5px;
+            -moz-transform: rotate(180deg);
+            -webkit-transform: rotate(180deg);
+            -o-transform: rotate(180deg);
+            -ms-transform: rotate(180deg);
+            transform:rotate(180deg);
+        }
+        .d_header_right > ajax-img {
+            margin-top: 3px;
+        }
+        
+        .p_title {
+            @apply(--layout-horizontal);
+            width: 100%;
+        }
+        .p_title > .name,
+        .p_title > .name > label {
+            @apply(--layout-flex);
+            @apply(--layout-horizontal);
+        }
+        .sub-flex {
+            --flex-label-font-size: 14px;
+            --flex-label-height: 28px;
+            --flex-label-line-height: 28px;
+        }
+
+        .p_title > .button {
+            margin-left: auto;
+            margin-right: 15px;
+            margin-top: 0px;
+        }
+        .p_title > .button > img {
+            margin-top: 5px;
+            height: 16px;
+            width: 16px;
+            cursor: pointer;
+        }
+
+        .caption {
+            font-weight: bold;
+            color: var(--code-color-font-thingray);
+        }
+
+        .p_body > .name {
+            height: 30px;
+        }
+
+        .p_body > .description {
+            margin: 10px 0px 15px 10px;
+            padding: 0px;
+            line-height: 1.6em;
+            overflow-y: auto;
+            word-wrap: break-word;
+        }
+        
+        .p_body > .range {
+            margin: 10px 0px 15px 5px;
+        }
+        .p_body > .range:last-child {
+            margin: 10px 0px 0px 5px;
+        }
+
+        .p_body > .range > * {
+            display: inline;
+        }
+        
+        .p_body > .range > #note {
+            color: var(--code-color-font-thingray);
+            margin: 0px 5px;
+        }
+
+        .p_body > .range > #value {
+            margin-left: 5px;
+        }
+        
+        .p_body > .processes_title {
+            @apply(--layout-horizontal);
+            width: 100%;
+        }
+
+        .p_body > .processes_title > common-button {
+            margin-left: auto;
+        }
+        
+        .stop_process {
+            color: var(--code-color-button-delete);
+        }
+        
+        .floating_panel {
+            @apply(--layout-horizontal);
+            margin: 20px;
+            background-color: var(--code-color-list-base);
+        }
+        .floating_panel > .back_button {
+        }
+        
+        .floating_panel > .delete_button {
+            margin-left: auto;
+            margin-right: 20px;
+        }
+    </style>
+
+
+    <template>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <delete-dialog id="deleteDialog"></delete-dialog>
+        <edit-operation-dialog id="operationDialog"></edit-operation-dialog>
+        
+        <div class="modal_screen"></div>
+
+        <drawer-panel>
+            <div class="d_header_title">{{selectedArtifact.id}}</div>
+            <div class="d_header_right">
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-global_close.svg"  on-tap="_close"></ajax-img>
+            </div>
+
+            <div class="d_body">
+
+                <panel-box class="main_panel">
+                    <div class="p_title">
+                        <div class="name">
+                            <label><flex-label class="sub-flex">
+                                {{selectedOperation.name}}
+                            </flex-label></label>
+                        </div>
+                    </div>
+                    <div class="p_body">
+                        <div class="caption">{{resource.description}}</div>
+                        <div class="description">{{selectedOperation.description}}</div>
+                        
+                        <div class="caption">{{resource.memory}}</div>
+                        <div class="range">
+                            <p id="value">{{selectedOperation.mem}}</p>
+                            <p id="note">{{resource.mb}}</p>
+                        </div>
+
+                        <div class="caption">{{resource.cpu}}</div>
+                        <div class="range">
+                            <p id="value">{{selectedOperation.cpu}}</p>
+                            <p id="note">&#37;</p>
+                        </div>
+                        
+                        <div class="processes_title">
+                            <div class="caption">{{resource.processes}}</div>
+                            <common-button size="A" type="accept" on-tap="runProcess">{{resource.run}}</common-button>
+                        </div>
+                        <div class="processes_list">
+                            <template is="dom-repeat" items="{{_processes}}">
+                                <div class="listItem" value="{{item}}">
+                                    <label><flex-label>{{item.id}}</flex-label></label>
+                                    <ajax-img class="icon-s cursor-pointer stop_process" src="/static/img/icn-global_stop.svg"  on-tap="stopProcess"></ajax-img>
+                                </div>
+                            </template>
+                        </div>
+                        
+                    </div>
+                </panel-box>
+            </div>
+
+            <div class="d_footer">
+                <div class="floating_panel">
+                    <common-button class="back_button" size="B" type="cancel" on-tap="_back">{{resource.back}}</common-button>
+                    <common-button class="delete_button" size="B" type="delete" on-tap="_delete">{{resource.delete}}</common-button>
+                    <common-button class="edit_button" size="B" type="add" on-tap="_edit">{{resource.edit}}</common-button>
+                </div>
+            </div>
+        </drawer-panel>
+    </template>
+
+    <script>
+        (function() {
+
+            Polymer({
+                is: 'artifact-sub-drawer',
+                properties: {
+                    selectedArtifact: {
+                        type: Object,
+                        notify: true,
+                        value: function () {
+                            return {};
+                        },
+                    },
+                    selected: {
+                        type: Object,
+                        notify: true,
+                        value: function () {
+                            return {};
+                        },
+                    },
+                    selectedOperation: {
+                        type: Object,
+                        notify: true,
+                        observer: 'changeSelectOperation'
+                    },
+                    selectedProcess: {
+                        type: Object,
+                        notify: true,
+                    },
+                    operations: {
+                        type: Object,
+                        notify: true,
+                    }
+                },
+                _back: function () {
+                    this.fire('artifact-sub-drawer', {request: 'close'});
+                },
+                _close: function () {
+                    this.fire('artifact-drawer', {request: 'close'});
+                    this.fire('artifact-sub-drawer', {request: 'close'});
+                },
+                runProcess: function (e) {
+                    var self = this;
+
+                    api.post("/runtime/processes", {
+                        body: {
+                            operation_id: self.selectedOperation.id,
+                            operation_version: self.selectedOperation.version,
+                        },
+                    }).then(function (data) {
+                        var ps = data.response;
+                        self._getProcesses();
+                    });
+                },
+                stopProcess: function (e) {
+                    var self = this;
+                    this.$.deleteDialog.show(function () {
+                        self.$.deleteDialog.close();
+                        api.delete("/runtime/processes/:process_id", {
+                            params: {
+                                "process_id": e.model.item.id,
+                            },
+                        }).then(function (result) {
+                            self.splice("_processes", e.model.index, 1);
+                        });
+                    },
+                    function () {                        // Cancel
+                            self.$.deleteDialog.close();
+                    });
+                },
+                changeSelectOperation: function (val) {
+                    if (val) {
+                        this._getProcesses();
+                    }
+                },
+                _getProcesses: function() {
+                    var self = this;
+                    api.get("/runtime/processes").then(function (result) {
+                        var processes = result.response;
+                        self._processes = processes.filter(function(p) {
+                           return self.selectedOperation.id == p.operation_id;
+                        });
+                    }).catch(function (e) {
+                        console.log(e);
+                    });
+                },
+                checkAnd: function() {
+                    for (i = 0; i < arguments.length; i++) {
+                        if (!arguments[i]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                _edit: function () {
+                    var self = this;
+                    this.$.operationDialog.show(this.selectedOperation, this.selectedArtifact, function (data) {
+                        var index = self.operations.indexOf(self.selectedOperation);
+                        self.set(["operations",index], data.response);
+                        self.selectedOperation = data.response;
+                    });
+                },
+                _delete: function (e) {
+                    if (!this.selectedOperation) {
+                        return;
+                    }
+
+                    var self = this;
+                    this.$.deleteDialog.show(function () {
+                        self.$.deleteDialog.close();
+                        api.delete("/dev/lambdas/:lambda_id/operations/:operation_id", {
+                            params: {
+                                "lambda_id": self.selectedOperation.lambda_id,
+                                "operation_id": self.selectedOperation.id
+                            },
+                        }).then(function(result) {
+//                            self.splice("operations", self.operations.indexOf(self.selectedOperation), 1);
+//                            self._back();
+                        });
+                                self.splice("operations", self.operations.indexOf(self.selectedOperation), 1);
+                                self._back();
+
+                            },
+                    function () {                        // Cancel
+                        self.$.deleteDialog.close();
+                    });
+                },
+            });
+        }());
+    </script>
+</dom-module>

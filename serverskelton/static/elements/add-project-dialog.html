@@ -1,0 +1,342 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/common/working-dialog.html">
+<link rel="import" href="/static/elements/common/message-dialog.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/drop-down.html">
+<link rel="import" href="/static/elements/common/range-slider.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="add-project-dialog">
+    <template>
+        <style>
+            button-dialog {
+                --button-dialog-overflow: auto;
+            }
+
+            
+            drop-down .dropdown-content{
+                color: var(--code-color-font-gray);
+                background-color: white;
+            }
+            
+            .dialog-field {
+                margin: 5px 0px;
+            }
+
+            drop-down {
+                --drop-down-dropdown-button: {
+                    border: solid 1px var(--code-color-border);
+                    box-sizing: border-box;
+                }
+                --drop-down-dropdown-button-no-event: {
+                    border: solid 1px var(--code-color-border);
+                    border-bottom: none;
+                }
+            }
+            
+            .lambdaList {
+                color: var(--code-color-font-gray);
+                background-color: white;
+            }
+            
+            .lambdaLabel {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            
+            .lambdaLabel .lambdaName{
+                margin: 0 5px;
+                @apply(--layout-flex);
+                line-height: 30px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+
+            .dialog-fieldset-sliders > .border-line {
+                width: 95%;
+                border-bottom: solid 1px #cccccc;
+                margin: 0 8px 20px 8px;
+            }
+
+            .dialog-fieldset-sliders > .border-line:last-child {
+                border-bottom: none;
+            }
+            
+            .arrow {
+                height: 16px;
+                width: 16px;
+                margin: 0px 5px;
+            }
+
+            .dropdown-trigger {
+                padding-left: 5px;
+            }
+
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <message-dialog id="messageDialog" mode="[[messageDialogType]]">[[messageDialogText]]</message-dialog>
+        <working-dialog id="workingDialog">[[workingDialogMessage]]</working-dialog>
+        
+        <button-dialog id="addprojectDialog" class="add-project-dialog">
+            <div class="dialog-title">{{resource.add_project}}</div>
+            <div class="dialog-body">
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.name}}</div>
+                    <div class="dialog-field">
+                        <input type="text" class="name" value="{{_projectName::input}}">
+                    </div>
+                </div>
+                
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.message}}</div>
+                    <div class="dialog-field">
+                        <textarea rows="7" value="{{_message::input}}"></textarea>
+                    </div>
+                </div>
+                <div class="dialog-fieldset-sliders">
+                    <div class="dialog-fieldset">
+                        <div class="dialog-legend">{{resource.memory}}&nbsp;(Max:[[_validate.mem_max]]MB)</div>
+                        <range-slider min="[[_validate.mem_min]]" max="[[_validate.mem_max]]" step="[[_validate.mem_step]]" minvalue="{{_memMin}}" maxvalue="{{_memMax}}" unit="MB" min-label="Min" max-label="Max"></range-slider>
+                    </div>
+                    <div class="border-line"></div>
+
+                    <div class="dialog-fieldset">
+                        <div class="dialog-legend">{{resource.cpu}}</div>
+                        <range-slider min="[[_validate.cpu_min]]" max="[[_validate.cpu_max]]" step="[[_validate.cpu_step]]" minvalue="{{_cpuMin}}" maxvalue="{{_cpuMax}}" unit="%" min-label="Min" max-label="Max"></range-slider>
+                    </div>
+                    <div class="border-line"></div>
+                </div>
+
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.cmd}}</div>
+                    <div class="dialog-field">
+                        <textarea rows="7" value="{{_projectCmd::input}}"></textarea>
+                    </div>
+                </div>
+                
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.lambda}}</div>
+                    <div class="dialog-field">
+                        <drop-down class="lambdaList" vertical-align="top" horizontal-align="left">
+                            <div class="dropdown-trigger lambdaLabel cursor-pointer">
+                                <flex-label>{{_selectedLambda.name}}</flex-label>
+                                <ajax-img class="arrow" src="/static/img/icn-arrow4_down.svg"></ajax-img>
+                            </div>
+                            <div class="dropdown-content">
+                                <template is="dom-repeat" items="{{_lambdas}}" sort="_sortLambdas">
+                                    <div class="lambdaLabel cursor-pointer" on-tap="_selectLambda">
+                                        <div class="lambdaName">{{item.name}}</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </drop-down>
+                    </div>
+                </div>
+                <div class="dialog-fieldset">
+                    <div class="dialog-field">
+                        <div class="lambdaInfo">
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.id}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.id]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.created_at}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.created_at]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.updated_at}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.updated_at]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.owner_id}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.owner_id]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.enabled}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.enabled]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.name}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.name]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.name_gl}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.name_gl]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.description}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.description]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.description_gl}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.description_gl]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.type}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.type]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.app_id}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.app_id]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.key}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.key]]</flex-label>
+                            </div>
+
+<!--
+                            <div>id:[[_selectedLambda.id]]</div>
+                            <div>created_at:[[_selectedLambda.created_at]]</div>
+                            <div>updated_at:[[_selectedLambda.updated_at]]</div>
+                            <div>owner_id:[[_selectedLambdaowner_id]]</div>
+                            <div>enabled:[[_selectedLambda.enabled]]</div>
+                            <div>name:[[_selectedLambda.name]]</div>
+                            <div>name_gl:[[_selectedLambda.name_gl]]</div>
+                            <div>description:[[_selectedLambda.description]]</div>
+                            <div>description_gl:[[_selectedLambda.description_gl]]</div>
+                            <div>type:[[_selectedLambda.type]]</div>
+                            <div>app_id:[[_selectedLambda.app_id]]</div>
+                            <div>key:[[_selectedLambda.key]]</div>
+-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="buttonArea">
+                <common-button size="B" type="cancel" on-tap="close">{{resource.cancel}}</common-button>
+                <common-button size="B" type="accept" on-tap="_createproject" disabled$={{!_checkAnd(_cpuMax,_cpuMin,_memMax,_memMin,_message,_projectName,_projectCmd,_selectedLambda)}}>{{resource.ok}}</common-button>
+            </div>
+        </button-dialog>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "add-project-dialog",
+                properties: {
+                    container: {
+                        type: Object,
+//                        notify: true,
+                    },
+                    callbackAccept: {
+                        type: Function,
+                    },
+                    callbackCancel: {
+                        type: Function,
+                    },
+                    _validate: {
+                        type: Object,
+                        value: function () { return config.cloud_runtime.project.validate; },
+                    },
+                },
+                show: function (callbackAccept, callbackCancel) {
+                    var self = this;
+                    if (typeof callbackAccept == "function"){
+                        this.callbackAccept = callbackAccept;
+                    }                    
+                    if (typeof callbackCancel == "function"){
+                        this.callbackCancel = callbackCancel;
+                    }
+                    this._getLambdas().then(function (data) {
+                        var v = config.cloud_runtime.project.validate;
+                        self._cpuMax = v.cpu_min + v.cpu_step;
+                        self._cpuMin = v.cpu_min;
+                        self._memMax = v.mem_min + v.mem_step;
+                        self._memMin = v.mem_min;
+                        self._message = "";
+                        self._projectName = "";
+                        self._projectCmd = "";
+                        self._selectedLambda = "";
+                        self.$.addprojectDialog.open();
+                    }).catch(function (e) {
+                        console.log(e);
+                    });
+                },
+                close: function () {
+                    this.$.addprojectDialog.close()
+                },
+                _getLambdas: function () {
+                    var self = this;
+                    return new Promise(function(resolve, reject) {
+                        api.get("/dev/lambdas").then(function (data) {
+                            self._lambdas = data.response;
+                            resolve();
+                        }).catch(function (e) {
+                            reject(e);
+                        });
+                    });
+                },
+                _showCreateDialog: function () {
+                    var self = this;
+                    this.$.editProjectDialog.show(null, function (data) {
+                        self.push("projects", data.res);
+                    });
+                },
+
+                _createproject: function () {
+                    var self = this;
+                    this.workingDialogMessage = this.resource.please_wait;
+                    this.$.workingDialog.toggle();
+                    codeApi.post("/projects/:project_id/containers/:container_id/push",{
+                        params: {
+                            project_id: self.container.project_id,
+                            container_id: self.container.container_id,
+                        },
+                        body: {
+                            "lambda_id": self._selectedLambda.id,
+                            "message": self._message,
+                            "mem_max": self._memMax.toString(10),
+                            "mem_min": self._memMin.toString(10),
+                            "cpu_max": (self._cpuMax / 100).toString(10),
+                            "cpu_min": (self._cpuMin / 100).toString(10),
+                            "project_name": self._projectName,
+                            "project_cmd": self._projectCmd.split(" "),
+                        }
+                    }).then(function (data) {
+                        console.log(data);
+                        self.messageDialogType = "Success";
+                        self.messageDialogText = this.resource.successfully_created;
+                        self.$.messageDialog.show();
+                    }).catch(function (e) {
+                        console.log(e);
+                        self.messageDialogType = "Error";
+                        self.messageDialogText = this.resource.failed_to_create;
+                        self.$.messageDialog.show();
+                    }).then(function () {
+                        self.$.workingDialog.toggle();
+                        if (typeof self.callbackAccept == "function"){
+                            self.callbackAccept();
+                        }
+                        self.$.addprojectDialog.close()
+                    });
+                },
+                _selectLambda: function (e) {
+                    this._selectedLambda = e.model.item;
+                },
+                _sortLambdas: function(a,b) {
+                    var aLow = a.name.toLowerCase();
+                    var bLow = b.name.toLowerCase();
+                    if( aLow < bLow ) return -1;
+                    if( aLow > bLow ) return 1;
+                    return 0;
+                },
+                _checkAnd: function() {
+                    for (i = 0; i < arguments.length; i++) {
+                        if (!arguments[i]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+            });
+        }());
+    </script>
+</dom-module>

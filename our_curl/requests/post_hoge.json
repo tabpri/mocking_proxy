@@ -1,0 +1,6 @@
+{
+"method":"POST",
+"version":"",
+"uri":"/hoge",
+"data":{"mem_max":2,"mem_min":1,"cpu_max":2,"cpu_min":1}
+}

@@ -1,0 +1,114 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="/static/elements/term-ui.html">
+<link rel="import" href="/static/elements/base-styles.html">
+
+<dom-module id="tab-bar">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            .tabArea0 {
+                @apply(--layout-horizontal);
+            }
+            .tabArea10 {
+                @apply(--layout-flex);
+                height: 40px;
+                position: relative;
+            }
+            .tabArea20 {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                overflow: hidden;
+            }
+            .tabArea30 {
+                height: 100px;
+                position: relative;
+            }
+            .tabArea40 {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                white-space: nowrap;
+                overflow-x: scroll;
+                overflow-y: hidden;
+                @apply(--layout-horizontal);
+            }
+            
+            .tab-button {
+                height: 40px;
+                padding: 0px 5px 0px 5px;
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            
+        </style>
+        
+        <div class="tabArea0" hidden="[[!tabList.length]]">
+            <div class="tab-button cursor-pointer" on-tap="prevTab" hidden$="[[hiddenPrevNext]]">
+                <ajax-img class="icon-s" src="/static/img/icn-arrow4_back.svg"></ajax-img>
+            </div>
+            <div class="tabArea10">
+                <div class="tabArea20">
+                    <div class="tabArea30">
+                        <iron-selector class="tabArea40" id="tabSelector" attr-for-selected="{{attrForSelected}}" selected="{{selectedTabId}}">
+                            <content></content>
+                        </iron-selector>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-button cursor-pointer" on-tap="nextTab" hidden$="[[hiddenPrevNext]]">
+                <ajax-img class="icon-s" src="/static/img/icn-arrow4_next.svg"></ajax-img>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "tab-bar",
+                properties: {
+                    tabList: {
+                        type: Array,
+                        notify: true,
+                    },
+                    selectedTabId: {
+                        type: Object,
+                        notify: true,
+                    },
+                    attrForSelected: {
+                        type: Object,
+                        notify: true,
+                    },
+                    hiddenPrevNext: {
+                        type: Boolean,
+                        notify: true,
+                    },
+                },
+                scrollTab: function () {
+                    this.$.tabSelector.scrollLeft = this.$.tabSelector.selectedItem.offsetLeft;
+                },
+                prevTab: function (e) {
+                    if (this.$.tabSelector.selected <= 0) {
+                        return;
+                    }
+                    this.$.tabSelector.selectPrevious();
+                    this.scrollTab();
+                },
+                nextTab: function (e) {
+                    if (this.$.tabSelector.selected >= this.$.tabSelector.childElementCount - 2) {
+                        return;
+                    }
+                    this.$.tabSelector.selectNext();
+                    this.scrollTab();
+                },
+            });
+
+        }());
+    </script>
+</dom-module>

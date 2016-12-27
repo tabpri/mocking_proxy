@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .\39 0155f21-9246-4fce-ad7c-8ac374a136e2 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>icn-code_undo</title>
+  <g id="c06bfaca-df32-4f64-9577-dedd9ce36fb9" data-name="レイヤー 2">
+    <g id="fe3d5782-8b8b-4e8d-afa0-75b89e224df9" data-name="レイヤー 1">
+      <g id="7bd40c80-8682-4fb6-9afe-f3a48e4d48b8" data-name="codeアイコン">
+        <g id="5defce05-4bbf-49f6-922f-fa8c69e73f34" data-name="icn-code_undo">
+          <rect class="90155f21-9246-4fce-ad7c-8ac374a136e2" width="300" height="300"/>
+          <path d="M141,96v66h89V16a7,7,0,0,1,7-7h46a7.06,7.06,0,0,1,7,7V215.5c0,3.85-3.19,6.5-7,6.5H141v67L10,192.5Z"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

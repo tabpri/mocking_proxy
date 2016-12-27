@@ -1,0 +1,60 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="/static/bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="/static/bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+
+<dom-module id="message-dialog">
+    <template>
+        <style>
+            .body {
+                @apply(--layout-vertical);
+                @apply(--layout-center-justified);
+                @apply(--layout-flex-auto);
+            }
+        </style>
+        
+        <button-dialog id="dialog">
+            <div class="dialog-title">[[mode]]</div>
+            <div class="dialog-body">
+                <div>
+                    <content></content>
+                </div>
+            </div>
+            <div class="buttonArea">
+                <common-button size="B" type="accept" on-tap="_callbackOk">OK</common-button>
+            </div>
+        </button-dialog>
+        
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "message-dialog",
+                properties: {
+                    mode: {
+                        type: Object,
+                    },
+                    callbackOk: {
+                        type: Function,
+                    },
+                },
+                show: function (callbackOk) {
+                    this.callbackOk = callbackOk;
+                    this.$.dialog.open();
+                },
+                _callbackOk: function () {
+                    if (typeof this.callbackOk == "function"){
+                        this.callbackOk();
+                    }
+                    this.$.dialog.close();
+                },
+            });
+
+        }());
+    </script>
+</dom-module>

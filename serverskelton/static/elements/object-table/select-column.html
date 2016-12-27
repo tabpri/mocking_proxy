@@ -1,0 +1,115 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="table-common.html">
+
+<dom-module id="select-column">
+    <style include="table-column-style">
+        check-box {
+            pointer-events: auto;
+        }
+    </style>
+
+    <template>
+        <div class="header">
+            <check-box checked="{{allSelected}}" hidden="[[!_table.items.length]]"></check-box>
+        </div>
+        <div id="rows" scroll-top="[[_table.scrollTop]]">
+            <template id="repeater" is="dom-repeat" items="{{_table.items}}" sort="{{_table.sort}}" filter="{{_table.filter}}">
+                <div class="row" status$="[[_status(_table.row.*, item.*)]]">
+                    <check-box checked="[[_value(item.*, path)]]" on-checked-changed="_checkedChanged"></check-box>
+                </div>
+            </template>
+        </div>
+        <template is="dom-repeat" items="{{_table.items}}" filter="_filter" observe="{{path}}" rendered-item-count="{{count}}">
+        </template>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'select-column',
+
+            behaviors: [ListTable.ColumnBehavior],
+
+            properties: {
+                allSelected: {
+                    type: Boolean,
+                    value: false,
+                    notify: true,
+                    observer: '_allSelectedChanged'
+                },
+                count: {
+                    type: Number,
+                    value: 0,
+                    notify: true
+                }
+            },
+
+            observers: [
+                '_pathChanged(path, _table.row)',
+                '_updateAllSelected(_table.items.length)',
+                '_clearSelected(_table.sort, _table.filter)'
+            ],
+
+            _allSelectedChanged: function(select) {
+                var now = this._isAllSelected();
+                if (now != select) {
+                    var items = this.get('_table.items') || [];
+                    var filter = this.get('_table.filter');
+                    for (var i=0; i<items.length; i++) {
+                        if (!filter || filter(items[i])) {
+                            this.set('_table.items.' + i + '.' + this.path, select);
+                        }
+                    }
+                }
+            },
+
+            _isAllSelected: function() {
+                var items = this._getRenderItems();
+                if (!items.length) return false;
+
+                var me = this;
+                return items.every(function(item) {
+                    return me.path && ListTable.prop(item, me.path) || false;
+                });
+            },
+
+            _getRenderItems: function() {
+                var items = this.get('_table.items') || [];
+                var filter = this.get('_table.filter');
+                return filter ? items.filter(filter) : items;
+            },
+
+            _pathChanged: function(path) {
+                this.set('_table.row.pathForSubSelected', path);
+                this._updateAllSelected();
+            },
+
+            _checkedChanged: function(e) {
+                e.model.set('item.' + this.path, e.detail.value);
+                this._updateAllSelected();
+            },
+
+            _updateAllSelected: function() {
+                this.debounce('_updateAllSelected', function() {
+                    this.allSelected = this._isAllSelected();
+                });
+            },
+
+            _filter: function(item) {
+                return !!(this.path && ListTable.prop(item, this.path));
+            },
+            
+            _clearSelected: function() {
+                this.debounce('_clearSelected', function() {
+                    var items = this.get('_table.items') || [];
+                    var filter = this.get('_table.filter');
+                    for (var i=0; i<items.length; i++) {
+                        if (filter && !filter(items[i])) {
+                            this.set('_table.items.' + i + '.' + this.path, false);
+                        }
+                    }
+                }, 1);
+            }
+        });
+    </script>
+</dom-module>

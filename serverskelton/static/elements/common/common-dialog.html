@@ -1,0 +1,83 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/elements/common/base-dialog.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+
+<dom-module id="common-dialog">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+/*
+            .title {
+                @apply(--layout-flex);
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+*/
+
+            base-dialog {
+                --base-dialog-titlebar: {
+                    width: 375px;
+                    padding: 0px 15px 0px 10px;
+                }
+            }
+/*
+            
+            .text {
+                margin-right: 15px;
+                line-height: 28px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+*/
+            
+            .close {
+                margin-left: auto;
+            }
+            
+        </style>
+        
+        <base-dialog id="dialog">
+            <content select=".dialog-title-left"></content>
+            <content select=".dialog-title"></content>
+            <ajax-img class="dialog-title-right close icon-s cursor-pointer" src="/static/img/icn-global_close.svg" on-tap="close"></ajax-img>
+            <content select=".dialog-body-top"></content>
+            <content select=".dialog-body" ></content>
+            <content select=".dialog-body-bottom"></content>
+        </base-dialog>
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "common-dialog",
+                properties: {
+                    _callbackClose: {
+                        type: Function,
+                    },
+                },
+                setCallbackClose: function (callbackClose) {
+                    if (typeof callbackClose == "function"){
+                        _callbackClose = callbackClose;
+                    }
+                },
+                open: function () {
+                    this.$.dialog.open();
+                },
+                close: function () {
+                    if (typeof this._callbackClose == "function"){
+                        this._callbackClose();
+                    }
+                    this.$.dialog.close();
+                },
+            });
+
+        }());
+    </script>
+</dom-module>

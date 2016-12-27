@@ -1,0 +1,398 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/drawer-panel.html">
+<link rel="import" href="/static/elements/common/panel-box.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="code-viewer-debug-editor">
+    <style include="base-styles"></style>
+    <style>
+        :host {
+            display: block;
+            /*position: absolute;*/
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 500px;
+        }
+
+        img {
+            display: inline;
+        }
+
+        .vertical {
+            @apply(--layout-flex);
+            @apply(--layout-vertical);
+        }
+
+        .d_body {
+            @apply(--layout-flex);
+            @apply(--layout-vertical);
+        }
+
+        .main_panel {
+            @apply(--layout-flex);
+            @apply(--layout-vertical);
+            margin-bottom: 10px;
+            --panel-box-main-style: {
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+            }
+        }
+
+        .main_panel:last-child {
+            margin-bottom: 0px;
+        }
+
+        .cmd-list {
+            --panel-box-body-style: {
+                overflow-y: auto;
+                @apply(--layout-flex);
+                padding: 0px;
+            }
+        }
+
+        .cmd-info {
+            --panel-box-body-style: {
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+                margin-bottom: 10px;
+                padding: 10px 15px 0px 15px;
+                overflow-y: auto;
+                word-break: break-all;
+            }
+            --panel-box-body-bottom-style: {
+                padding: 0px 15px 15px 15px;
+                height: 30px;
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+            }
+        }
+
+        .listItem {
+            padding-left: 15px;
+        }
+
+        .listItem.iron-selected {
+            background-color: var(--code-color-active);
+            color: var(--code-color-font-white);
+        }
+
+        .menu_bar {
+            height: 30px;
+            @apply(--layout-horizontal);
+            @apply(--layout-end-justified);
+        }
+
+        .panel-in-buttons {
+            height: 24px;
+        }
+
+        .dialog-field {
+            margin: 5px 0px;
+            }
+
+        common-button {
+            margin-left: 15px;
+        }
+
+        .d_header_title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .d_header_right {
+            @apply(--layout-horizontal);
+            color: #fff;
+        }
+
+        .d_header_right > ajax-img {
+            margin-left: 15px;
+        }
+
+        .p_title {
+            @apply(--layout-horizontal);
+            width: 100%;
+        }
+        .p_title > .name,
+        .p_title > .name > label {
+            @apply(--layout-flex);
+            @apply(--layout-horizontal);
+        }
+        .sub-flex {
+            --flex-label-font-size: 14px;
+            --flex-label-height: 28px;
+            --flex-label-line-height: 28px;
+        }
+
+        .p_title > .button {
+            margin-left: auto;
+            margin-right: 15px;
+            margin-top: 0px;
+        }
+
+        .p_title > .button > ajax-img {
+            margin-top: 5px;
+        }
+
+        .dialog-legend {
+            margin-top: 5px;
+        }
+
+        input[type=text] {
+            height: 24px;
+            padding-left: 5px;
+            padding-right: 5px;
+            border: solid 1px var(--code-color-border);
+        }
+
+        [vanish] {
+            display: none;
+        }
+    </style>
+
+
+    <template>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <delete-dialog id="deleteDialog"></delete-dialog>
+
+        <button-dialog modal id="editTaskDialog">
+
+            <div class="dialog-title" vanish$={{!_isBrankObject(_editTargetTask)}}>{{resource.add_command}}</div>
+            <div class="dialog-title" vanish$={{_isBrankObject(_editTargetTask)}}>{{resource.edit_command}}</div>
+            
+            <div class="dialog-body">
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.name}}</div>
+                    <div class="dialog-field">
+                        <input type="text" value="{{_taskName::input}}">
+                    </div>
+                    <div class="dialog-legend">{{resource.cmd}}</div>
+                    <div class="dialog-field">
+                        <input type="text" value="{{_taskCmd::input}}">
+                    </div>
+                </div>
+            </div>
+            <div class="buttonArea">
+                <common-button size="B" type="cancel" on-tap="_editTaskCancel">{{resource.Cancel}}</common-button>
+                <common-button size="B" type="accept" on-tap="_createTask" vanish$={{!_isBrankObject(_editTargetTask)}} disabled$={{!_checkAnd(task.cmd)}}>{{resource.ok}}</common-button>
+                <common-button size="B" type="accept" on-tap="_editTask" vanish$={{_isBrankObject(_editTargetTask)}} disabled$={{!_checkAnd(task.cmd)}}>{{resource.ok}}</common-button>
+            </div>
+        </button-dialog>
+
+        <drawer-panel nofooter>
+            <div class="d_header_title">{{resource.debug_editor}}</div>
+            <div class="d_header_right">
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-global_close.svg" on-tap="_close"></ajax-img>
+            </div>
+
+            <div class="d_body">
+                <panel-box class="main_panel cmd-list">
+                    <div class="p_title">{{resource.Command_List}}</div>
+                        <iron-selector class="vertical p_body" attr-for-selected="value" selected="{{selectedTask}}">
+                            <template is="dom-repeat" items="{{tasks}}" sort="_sortTasks">
+                                <flex-label class="listItem cursor-pointer" value="{{item}}">{{item.name}}</flex-label>
+                            </template>
+                        </iron-selector>
+                </panel-box>
+                <panel-box class="main_panel cmd-info">
+                    <div class="p_title">
+                        <div class="name">
+                            <label><flex-label class="sub-flex">
+                                {{selectedTask.name}}
+                            </flex-label></label>
+                        </div>
+                    </div>
+                    <div class="p_body">
+                        {{selectedTask.cmd}}
+                    </div>
+                    <div class="p_body-bottom">
+                        <common-button size="A" type="delete" on-tap="_showDeleteDialog" disabled$="{{!selectedTask}}">{{resource.delete}}</common-button>
+                        <common-button size="A" type="accept" on-tap="_showEditTask" disabled$="{{!selectedTask}}">{{resource.edit}}</common-button>
+                    </div>
+                </panel-box>
+                <div class="menu_bar">
+                    <common-button size="B" type="accept" on-tap="_showCreateTask">{{resource.add}}</common-button>
+                </div>
+            </div>
+        </drawer-panel>
+    </template>
+
+    <script>
+        (function() {
+
+            Polymer({
+                is: 'code-viewer-debug-editor',
+                properties: {
+                    tasks: {
+                        type: Object,
+                        notify: true,
+                    },
+                    container: {
+                        type: Object,
+                        notify: true,
+                    },
+                    task: {
+                        type: Object,
+                        notify: true,
+                    },
+                    selectedTask: {
+                        type: Object,
+                        notify: true,
+                        value: null,
+                    },
+                    _editTargetTask: {
+                        type: Object,
+                        notify: true,
+                        value: function () {
+                            return {};
+                        },
+                    },opendebugeditor: {
+                        type: Boolean
+                    },project_id: {
+                        type: String
+                    }
+                },
+                attached: function() {
+                    console.log("attached for code viewer debug editor called")
+                    this.listen(window, 'create-task', '_showCreateTask');
+                },
+                detached: function() {
+                    this.unlisten(window, 'create-task', '_showCreateTask');
+                },
+                _close: function () {
+                    this.fire('debug-editor', {request: 'close'});
+                },
+                _sortTasks: function(a,b) {
+                    var aLow = a.ordernum;
+                    var bLow = b.ordernum;
+                    if( aLow < bLow ) return -1;
+                    if( aLow > bLow ) return 1;
+                    return 0;
+                },
+                _showDeleteDialog: function (e) {
+                    var self = this;
+                    this.$.deleteDialog.show(
+                        function () {                        // Accept
+                            var index = self.tasks.indexOf(self.selectedTask);
+                            codeApi.delete("/projects/:project_id/tasks/:task_id", {
+                                params: {
+                                    project_id: self.project_id,
+                                    task_id: self.selectedTask.id,
+                                }
+                            }).then(function (data) {
+                                self.splice("tasks", index, 1);
+                                self.selectedTask = null;
+                                self.$.deleteDialog.close();
+                            }.bind(this)).catch(function (e) {
+                            });
+                        },
+                        function () {                        // Cancel
+                            self.$.deleteDialog.close();
+                        }
+                    );
+                },
+                _showEditTask: function (e) {
+                    this._updateIndex = this.tasks.indexOf(this.selectedTask);
+
+                    this._editTargetTask = this.selectedTask;
+                    this.task.cmd = this.selectedTask.cmd;
+                    this.task.name = this.selectedTask.name;
+                    this.$.editTaskDialog.open();
+                },
+                _editTask: function (e) {
+                    this.$.editTaskDialog.close();
+                    codeApi.patch("/projects/:project_id/tasks/:task_id", {
+                        params: {
+                            project_id: this.project_id,
+                            task_id: this._editTargetTask.id,
+                        },
+                        body: {
+                          cmd: this.task.cmd,
+                          name: this.task.name,
+                          project_id: this.container.project_id,
+                        }
+                    }).then(function (data) {
+                        var index = this.tasks.indexOf(this._editTargetTask);
+
+                        this.set("tasks." + index + ".cmd", this.task.cmd);
+                        this.set("tasks." + index + ".name", this.task.name);
+
+                        this.selectedTask = null;
+                        this.selectedTask = this.tasks[index];
+
+                    }.bind(this)).catch(function (e) {
+
+                    });
+                },
+                _editTaskCancel: function (e) {
+                    this.$.editTaskDialog.close();
+                },
+                _showCreateTask: function (e) {
+                    console.log("_showCreateTask in debug editor")
+                    this._editTargetTask = {};
+                    this.task = new Object()
+                    this.task.cmd = "";
+
+                    this.$.editTaskDialog.open();
+                    if(this)
+                    console.log("_showCreateTask in debug editor editTaskDialog.open")
+
+                },
+                _createTask: function (e) {
+                    this.$.editTaskDialog.close();
+                    maxordernum = this.tasks.length
+                    console.log(maxordernum);
+
+                    codeApi.post("/projects/:project_id/tasks", {
+                        params: {
+                            project_id: this.project_id,
+                        },
+                        body: {
+                            cmd: this.task.cmd,
+                            name: this.task.name,
+                            ordernum: 1,
+                            project_id: this.project_id,
+                            // cmd: this._taskCmd,
+                            // project_id: this.container.project_id,
+                            // name: this._taskName,
+                            // ordernum: maxordernum,
+                        }
+                    }).then(function (data) {
+                        this.push("tasks", data.res);
+                        this.selectedTask = data.res;
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                    }.bind(this));
+                },
+                _createTaskCancel: function (e) {
+                    this.$.editTaskDialog.close();
+                },
+                _checkAnd: function() {
+                    for (i = 0; i < arguments.length; i++) {
+                        if (!arguments[i]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                _isBrankObject: function (obj) {
+                    if(Object.keys(obj).length){
+                        return false;
+                    }
+                    return true;
+                }
+            });
+        }());
+    </script>
+</dom-module>

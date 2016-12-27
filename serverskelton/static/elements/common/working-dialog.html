@@ -1,0 +1,43 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="/static/bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="/static/bower_components/paper-progress/paper-progress.html">
+
+<dom-module id="working-dialog">
+    <template>
+        <style>
+            .progress {
+                width: 100%;
+            }
+        </style>
+        
+        <paper-dialog modal id="workingDialog">
+            <h2>Working</h2>
+            <paper-dialog-scrollable>
+                <p><content></content></p>
+            </paper-dialog-scrollable>
+            <div><paper-progress class="progress" indeterminate></paper-progress></div>
+        </paper-dialog>
+        
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "working-dialog",
+                properties: {
+                    item: {
+                        type: Object,
+                        notify: true,
+                    },
+                },
+                toggle: function () {
+                    this.$.workingDialog.resetFit()
+                    this.$.workingDialog.toggle();
+                },
+            });
+
+        }());
+    </script>
+</dom-module>

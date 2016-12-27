@@ -1,0 +1,380 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/common/working-dialog.html">
+<link rel="import" href="/static/elements/common/message-dialog.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/drop-down.html">
+<link rel="import" href="/static/elements/common/range-slider.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/local_components/display-info/display-infos-input.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+<link rel="import" href="/static/local_components/validate-ui/validate-dropdown.html">
+<link rel="import" href="/static/local_components/access-behavior/access-behavior.html">
+
+
+
+
+<dom-module id="add-artifact-dialog">
+    <template>
+        <style>
+            button-dialog {
+                --button-dialog-overflow: auto;
+            }
+
+            
+            drop-down .dropdown-content{
+                color: var(--code-color-font-gray);
+                background-color: white;
+            }
+            
+            .dialog-field {
+                margin: 5px 0px;
+            }
+
+            drop-down {
+                --drop-down-dropdown-button: {
+                    border: solid 1px var(--code-color-border);
+                    box-sizing: border-box;
+                }
+                --drop-down-dropdown-button-no-event: {
+                    border: solid 1px var(--code-color-border);
+                    border-bottom: none;
+                }
+            }
+            
+            .lambdaList {
+                color: var(--code-color-font-gray);
+                background-color: white;
+            }
+            
+            .lambdaLabel {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            
+            .lambdaLabel .lambdaName{
+                margin: 0 5px;
+                @apply(--layout-flex);
+                line-height: 30px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+
+            .dialog-fieldset-sliders > .border-line {
+                width: 95%;
+                border-bottom: solid 1px #cccccc;
+                margin: 0 8px 20px 8px;
+            }
+
+            .dialog-fieldset-sliders > .border-line:last-child {
+                border-bottom: none;
+            }
+            
+            .arrow {
+                height: 16px;
+                width: 16px;
+                margin: 0px 5px;
+            }
+
+            .dropdown-trigger {
+                padding-left: 5px;
+            }
+
+        </style>
+
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <message-dialog id="messageDialog" mode="[[messageDialogType]]">[[messageDialogText]]</message-dialog>
+        <working-dialog id="workingDialog">[[workingDialogMessage]]</working-dialog>
+        
+        <button-dialog id="addArtifactDialog" class="add-artifact-dialog">
+            <div class="dialog-title">{{resource.artifact}}</div>
+            <div class="dialog-body">
+                <display-infos-input id="displayInfos" displayattributes='["display_name","display_description"]' display-infos="{{displayInfos}}"></display-infos-input>
+
+
+                <div class="dialog-fieldset-sliders">
+                    <div class="dialog-fieldset">
+                        <div class="dialog-legend">{{resource.memory}}&nbsp;({{resource.max}}:[[_validate.mem_max]]MB)</div>
+                        <range-slider min="[[_validate.mem_min]]" max="[[_validate.mem_max]]" step="[[_validate.mem_step]]" minvalue="{{_memMin}}" maxvalue="{{_memMax}}" unit="MB" min-label="{{resource.min}}" max-label="{{resource.max}}"></range-slider>
+                    </div>
+                    <div class="border-line"></div>
+
+                    <div class="dialog-fieldset">
+                        <div class="dialog-legend">{{resource.cpu}}</div>
+                        <range-slider min="[[_validate.cpu_min]]" max="[[_validate.cpu_max]]" step="[[_validate.cpu_step]]" minvalue="{{_cpuMin}}" maxvalue="{{_cpuMax}}" unit="%" min-label="{{resource.min}}" max-label="{{resource.max}}"></range-slider>
+                    </div>
+                    <div class="border-line"></div>
+                </div>
+
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.cmd}}</div>
+                    <div class="dialog-field">
+                        <textarea rows="7" value="{{_artifactCmd::input}}"></textarea>
+                    </div>
+                </div>
+
+
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.provider_profile}}</div>
+                    <div class="dialog-field">
+                    <validate-dropdown required id="vd_provider_profile"        title="{{resource.provider_profiles}}" value="{{_selected_provider_profiles}}" invalids="{{invalids}}" datas="{{_provider_profiles}}" disp-path="display_owner_group_name_global"></validate-dropdown>
+                    </div>
+                </div>
+
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.lambda}}</div>
+                    <div class="dialog-field">
+                        <drop-down class="lambdaList" vertical-align="top" horizontal-align="left">
+                            <div class="dropdown-trigger lambdaLabel cursor-pointer">
+                                <flex-label>{{_selectedLambda.name}}</flex-label>
+                                <ajax-img class="arrow" src="/static/img/icn-arrow4_down.svg"></ajax-img>
+                            </div>
+                            <div class="dropdown-content">
+                                <template is="dom-repeat" items="{{_lambdas}}" sort="_sortLambdas">
+                                    <div class="lambdaLabel cursor-pointer" on-tap="_selectLambda">
+                                        <div class="lambdaName">{{localize(item.name)}}test</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </drop-down>
+                    </div>
+                </div>
+                <div class="dialog-fieldset">
+                    <div class="dialog-field">
+                        <div class="lambdaInfo">
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.id}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.id]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.created_at}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.created_at]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.updated_at}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.updated_at]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.owner_id}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.owner_id]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.enabled}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.enabled]]</flex-label>
+                            </div>
+
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.type}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.type]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.app_id}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.app_id]]</flex-label>
+                            </div>
+                            <div class="dialog-parameter">
+                                <div class="dialog-parameter-legend">{{resource.key}}</div>
+                                <flex-label class="dialog-parameter-field">[[_selectedLambda.key]]</flex-label>
+                            </div>
+
+<
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="buttonArea">
+                <common-button size="B" type="cancel" on-tap="close">{{resource.cancel}}</common-button>
+                <common-button size="B" type="accept" on-tap="_createArtifactService" disabled$={{!_checkAnd(_cpuMax,_cpuMin,_memMax,_memMin,_artifactCmd,_selectedLambda)}}>{{resource.ok}}</common-button>
+            </div>
+        </button-dialog>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "add-artifact-dialog",
+                behaviors: [CommonBehavior.CommonAccessBehavior],
+                properties: {
+                    container_id: {
+                        type: String
+                    },
+                    callbackAccept: {
+                        type: Function,
+                    },
+                    callbackCancel: {
+                        type: Function,
+                    },
+                    _validate: {
+                        type: Object,
+                        value: function () { return config.cloud_runtime.artifact.validate; }
+                    },project_id: {
+                        type: String,
+                        notify: true
+                    },_locales: {
+                        type: Object
+                    },_selectedlocale: {
+                        type:Object
+                    },invalids: {
+                        type: Array,
+                        notify: true
+                    }
+                },
+                setDropDownData: function (parameters) {
+                    var self = this;
+                    parameters.forEach(function(param) {
+                        self.getData(self, param.path, function(res) {
+                            self.set(param.output , res.response);
+                        },{"top": 100});
+                    });
+                },
+                show: function (callbackAccept, callbackCancel) {
+                    console.log("mark this.project_id")
+                    console.log(this.project_id)
+
+                    var self = this;
+                    if (typeof callbackAccept == "function"){
+                        this.callbackAccept = callbackAccept;
+                    }                    
+                    if (typeof callbackCancel == "function"){
+                        this.callbackCancel = callbackCancel;
+                    }
+                    this._getLambdas().then(function (data) {
+                        var v = config.cloud_runtime.artifact.validate;
+                        self._cpuMax = v.cpu_min + v.cpu_step;
+                        self._cpuMin = v.cpu_min;
+                        self._memMax = v.mem_min + v.mem_step;
+                        self._memMin = v.mem_min;
+                        self._description = "";
+                        self._artifactName = "";
+                        self._artifactCmd = "";
+                        self._selectedLambda = "";
+                        this.setDropDownData([{path: '/dev/provider_profiles', output: '_provider_profiles'}])
+
+                        self.$.addArtifactDialog.open();
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                    });
+                },
+                close: function () {
+                    this.$.addArtifactDialog.close()
+                },
+                _getLambdas: function () {
+                    console.log("mark _getLambdas")
+
+                    var self = this;
+                    return new Promise(function(resolve, reject) {
+                        api.get("/dev/lambdas").then(function (data) {
+                            self._lambdas = data.response;
+                            console.log("mark self._lambdas")
+                            console.log(self._lambdas)
+
+                            resolve();
+                        }).catch(function (e) {
+                            reject(e);
+                        });
+                    });
+                },
+
+                _createArtifactService: function () {
+                    var self = this;
+                    this.workingDialogMessage = this.resource.workingDialogMessage;
+                    this.$.workingDialog.toggle();
+
+                    display_info = this.$.displayInfos.getModel()
+
+                    codeApi.post("/containers/:container_id/push",{
+                        params: {
+                            container_id: self.container_id,
+                        },
+                        body: {
+                            "artifact_cmd": self._artifactCmd.split(" "),
+                        }
+                    }).then(function (res) {
+                        console.log("mark res")
+                        console.log(res)
+                        console.log("mark self.project_id")
+                        console.log(self.project_id)
+
+                        api.post("/dev/lambdas/:lambda_id/artifacts",{
+                            params: {
+                                lambda_id: self._selectedLambda.id,
+                            },
+                            body: {
+                                "mem_max": self._memMax,
+                                "mem_min": self._memMin,
+                                "cpu_max": self._cpuMax,
+                                "cpu_min": self._cpuMin,
+                                "is_enabled" : false,
+                                "is_released" : false,
+                                "is_cataloged" : false,
+                                "display_info": display_info,
+                                "display_owner_group_name": self.display_owner_group_name,
+                                "image_id": self.project_id+"artifact",
+                                'dev_name': "dummy",
+                                'provider_profile_id': self._selected_provider_profiles.id
+//                                "provider_profile_id": "j4X4YPAxsFf2o66WCZM4wsefl7VLJEU3z8dmxST7KfoXZkgQ6mTG0UTzNiGapuQH"
+                            }
+                        }).then(function (res) {
+                            codeApi.post("/project_artifacts",{
+                                body: {
+                                    "lambda_id": self._selectedLambda.id,
+                                    "artifact_id": res.response.artifact_id,
+                                    "project_id": self.project_id
+                                }
+                            }).then(function (data) {
+                                self.$.successDialog.success(); //@todo
+                            }).catch(function (e) {
+                                console.log(e);
+                                self.$.messageDialog.error(); //@todo
+                            }).then(function () {
+                                if (typeof self.callbackAccept == "function"){
+                                    self.callbackAccept();
+                                }
+                            });
+                        }).catch(function (e) {
+                            console.log(e);
+//                            self.$.messageDialog.error(); //@todo
+                        }).then(function () {
+                            //                                            self.$.addArtifactDialog.close()
+                            if (typeof self.callbackAccept == "function"){
+                                self.callbackAccept();
+                            }
+                        });
+                    }).catch(function (e) {
+                        console.log(e);
+//                        self.$.messageDialog.error(); //@todo
+                    }).then(function () {
+                        self.$.workingDialog.toggle();
+                        if (typeof self.callbackAccept == "function"){
+                            self.callbackAccept();
+                        }
+                    });
+                },
+
+                _selectLambda: function (e) {
+                    this._selectedLambda = e.model.item;
+                },
+                _sortLambdas: function(a,b) {
+                    var aLow = a.name.toLowerCase();
+                    var bLow = b.name.toLowerCase();
+                    if( aLow < bLow ) return -1;
+                    if( aLow > bLow ) return 1;
+                    return 0;
+                },
+                _checkAnd: function() {
+                    for (i = 0; i < arguments.length; i++) {
+                        if (!arguments[i]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+            });
+        }());
+    </script>
+</dom-module>

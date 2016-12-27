@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .a05be005-d5e2-4303-bc3f-3f6d3b3b5147 {
+        fill-rule: evenodd;
+      }
+
+      .\37 500ff51-400f-4e1a-9409-2ccd0e395a1a {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>icn-global_edit</title>
+  <g id="918d4d78-630b-41b6-9d94-2b98f885688b" data-name="レイヤー 2">
+    <g id="9a640c23-f6d5-41dc-b68c-92dfbf6d8907" data-name="レイヤー 1">
+      <g id="6e56434c-d0a5-402c-ba78-e94a56cc1c2f" data-name="icn-global_edit">
+        <path id="0c3f8111-feb5-4a83-a4cc-8a22684206c3" data-name="PEN 3" class="a05be005-d5e2-4303-bc3f-3f6d3b3b5147" d="M284.55,52.81,255.64,81.66,217.1,43.2,246,14.35a13.65,13.65,0,0,1,19.27,0l19.27,19.23A13.58,13.58,0,0,1,284.55,52.81Zm-202.43,125,38.55,38.47L69.29,229.1ZM246,91.28,130.37,206.68,91.83,168.22,207.46,52.81ZM38.5,52.5v209h209V110.33l28-27.38V275.47c0,7.56-7,14-14.53,14H23.66c-7.56,0-13.16-6.47-13.16-14V38.16c0-7.56,5.6-13.66,13.16-13.66H217l-27.38,28Z"/>
+        <rect class="7500ff51-400f-4e1a-9409-2ccd0e395a1a" width="300" height="300"/>
+        <rect class="7500ff51-400f-4e1a-9409-2ccd0e395a1a" width="300" height="300"/>
+      </g>
+    </g>
+  </g>
+</svg>

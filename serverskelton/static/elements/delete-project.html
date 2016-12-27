@@ -1,0 +1,47 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/project-viewer.html" >
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<!-- it's a just another killer -->
+<dom-module id="delete-project">
+    <template>
+        <delete-dialog id="deleteDialog"></delete-dialog>
+        <project-viewer></project-viewer>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                is: "delete-project",
+                attached: function(e){
+
+                    console.log("mark delete-project")
+
+                    console.log(e)
+                    console.log(this.project_id)
+
+//                    this.fire('delete-project', {project_id: this.project_id});
+                    var self = this;
+                    self._selectedMenuItem = undefined;
+                    self.$.deleteDialog.show(
+                            function () {
+                                codeApi.delete("/projects/:project_id", {
+                                    params: {
+                                        project_id: self.project_id,
+                                    },
+                                }).then(function (data) {
+                                    location.href="/" // should do in SPA way
+                                }).catch(function (e) {
+                                    console.log(e);
+                                    self.$.deleteDialog.close();
+                                });
+                            },
+                            function () {                        // Cancel
+                                self.$.deleteDialog.close();
+                            }
+                    );
+                },
+            });
+        }());
+    </script>
+</dom-module>

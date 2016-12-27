@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .\32 0b069ea-d734-48d5-b5a9-6de3be79de84 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>icn-code_delete</title>
+  <g id="dfdbfe49-ffdb-4e75-8ab7-e0cba686b23e" data-name="レイヤー 2">
+    <g id="eae57065-b9ae-4fa0-9f8a-cd63a35163ee" data-name="レイヤー 1">
+      <g id="1dd0ff73-bdfe-40a4-bec4-8318927d10ac" data-name="codeアイコン">
+        <g id="08c4423a-220d-4b7d-8204-6b47e9635d60" data-name="icn-code_delete">
+          <path d="M185.1,149.25,281.05,53.3a23.79,23.79,0,0,0,0-33.54l-1.81-1.81a23.79,23.79,0,0,0-33.54,0L149.75,113.9l-95-95a25.07,25.07,0,0,0-35.36,0h0a25.07,25.07,0,0,0,0,35.36l95,95L18.45,245.2a23.79,23.79,0,0,0,0,33.54l1.81,1.81a23.79,23.79,0,0,0,33.54,0l95.95-95.95,95,95a25.07,25.07,0,0,0,35.36,0h0a25.07,25.07,0,0,0,0-35.36Z"/>
+          <rect class="20b069ea-d734-48d5-b5a9-6de3be79de84" width="300" height="300"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

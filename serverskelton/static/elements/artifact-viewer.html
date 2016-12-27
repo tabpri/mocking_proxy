@@ -1,0 +1,365 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/add-artifact-dialog.html">
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/common/working-dialog.html">
+<link rel="import" href="/static/elements/common/message-dialog.html">
+<link rel="import" href="/static/elements/common/simple-slider.html">
+<link rel="import" href="/static/elements/common/check-box.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/item-selector.html">
+<link rel="import" href="/static/elements/artifact-drawer.html">
+<link rel="import" href="/static/elements/project-menu.html">
+
+<link rel="import" href="/static/elements/artifact-sub-drawer.html">
+<link rel="import" href="/static/elements/object-table/object-table.html">
+<link rel="import" href="/static/elements/object-table/select-column.html">
+<link rel="import" href="/static/elements/object-table/text-column.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+<link rel="import" href="/static/local_components/i18n-data/localize-text-column.html">
+
+<!--<link rel="import" href="/static/elements/base-styles.html">-->
+<link rel="import" href="/static/css/app-styles.html">
+
+
+<dom-module id="artifact-viewer">
+    <template>
+        <style include="app-styles"></style>
+        <style>
+            :host {
+                /*@apply(--layout-flex);*/
+                /*position: relative;*/
+                @apply(--layout-vertical);
+                height: 100%;
+
+            }
+            .buttom_bar{
+                position: absolute;
+                bottom: 0px;
+            }
+
+            .menu_bar {
+                @apply(--layout-horizontal);
+                width: 100%;
+                height: 40px;
+                background-color: var(--code-color-list-base);
+            }
+
+            .menu_bar > .delete_button {
+                min-width: 90px;
+                margin-left: 40px;
+                margin-top: 5px;
+            }
+
+            .menu_bar > .add_button {
+                min-width: 90px;
+                margin-left: auto;
+                margin-top: 5px;
+                margin-right: 40px;
+            }
+
+            .main_area {
+                @apply(--layout-flex);
+                position: relative;
+            }
+
+            .list_area {
+                @apply(--layout-fit);
+                display: block;
+                height: 100%;
+            }
+
+            responsive-table {
+                height: 100%;
+            }
+            
+            .list {
+                @apply(--layout-fit);
+            }
+
+            artifact-drawer {
+                z-index: 2;
+            }
+
+            artifact-sub-drawer {
+                z-index: 3;
+            }
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <div class="mainContents">
+            <code-menu current-project="{{currentProject}}" index-main-contant="{{indexMainContant}}" mode="Deploy"></code-menu>
+
+        <!--<div class="menu_bar">-->
+            <!--<common-button class="delete_button" size="B" type="delete" on-tap="_showArtifactDeleteDialog" disabled$="{{!_checkArtifactEnabled(artifacts.*)}}">delete</common-button>-->
+            <!--<common-button class="add_button" size="B" type="accept" on-tap="_showArtifactDialog">add artifact</common-button>-->
+        <!--</div>-->
+
+            <div class="wrapTable">
+                <object-table class="list" items="{{artifacts}}" order="{{_order}}" dir="{{_dir}}" selected="{{_selectedArtifactId}}" toggle manual-sort>
+                    <select-column path="{{resource.enabled}}" flex="none"></select-column>
+                    <localize-text-column label="{{resource.name}}" path="name" align="left"></localize-text-column>
+                    <localize-text-column label="{{resource.description}}" path="description" align="left"></localize-text-column>
+                    <text-column label="{{resource.cpu}}" text="{item.cpu_min}&nbsp;-&nbsp;{item.cpu_max}"></text-column>
+                    <text-column label="{{resource.mem}}" text="{item.mem_min}&nbsp;-&nbsp;{item.mem_max}"></text-column>
+                </object-table>
+                <item-selector items="{{artifacts}}" item-id="{{_selectedArtifactId}}" item="{{_selectedArtifact}}"></item-selector>
+
+            </div>
+            <div class="footer">
+                <common-button class="delete_button" size="B" type="delete" on-tap="_showArtifactDeleteDialog" disabled$="{{!_checkArtifactEnabled(artifacts.*)}}">{{resource.delete}}</common-button>
+                <common-button class="add_button" size="B" type="accept" on-tap="_showArtifactDialog">{{resource.add_artifact}}</common-button>
+                <!--<common-button size="B" type="accept" on-tap="_showProjectDialog">Add</common-button>-->
+            </div>
+            <delete-dialog id="deleteDialog"></delete-dialog>
+            <working-dialog id="workingDialog">[[workingDialogText]]</working-dialog>
+            <message-dialog id="messageDialog" mode="[[messageDialogType]]">[[messageDialogText]]</message-dialog>
+            <add-artifact-dialog id="createArtifactDialog" container_id="[[container_id]]" project_id="{{project_id}}"></add-artifact-dialog>
+
+        </div>
+
+
+        <artifact-drawer id="artifactDrawer" hidden="[[!_openartifactdrawer]]" selected-artifact="{{_selectedArtifact}}" selected-operation="{{_selectedOperation}}" operations="{{_operations}}"></artifact-drawer>
+        <artifact-sub-drawer hidden="[[!_openartifactsubdrawer]]" selected-artifact="{{_selectedArtifact}}" selected-operation="{{_selectedOperation}}" operations="{{_operations}}"></artifact-sub-drawer>
+
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "artifact-viewer",
+                properties: {
+                    _selectedArtifact: {
+                        type: Object,
+                        observer: "_changeSelected",
+                        notify: true,
+                    },
+                    _selectedOperations: {
+                        type: Object,
+                        notify: true,
+                    },
+                    container_id: {
+                        type: String,
+                        observer: "_changeContainer",
+                        notify: true,
+                    },
+                    artifacts: {
+                        type: Array,
+                    },
+                    _order: {
+                        type: String,
+                        notify: true,
+                    },
+                    indexMainContant: {
+                        type: Object,
+                        notify: true,
+                    },
+                    _dir: {
+                        type: String,
+                        notify: true,
+                    },
+                    _openartifactdrawer: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    _openartifactsubdrawer: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    _operations: {
+                        type: Object,
+                        notify: true,
+                    }
+                    ,project_id: {
+                        type: String,
+                        notify: true,
+                        observer: '_getArtifacts'
+                    }
+                },
+                attached: function() {
+                    this.listen(window, 'artifact-drawer', '_openArtifactDrawer');
+                    this.listen(window, 'artifact-sub-drawer', '_openArtifactSubDrawer');
+//
+
+                },
+                detached: function() {
+                    this.unlisten(window, 'artifact-drawer', '_openArtifactDrawer');
+                    this.unlisten(window, 'artifact-sub-drawer', '_openArtifactSubDrawer');
+                },
+                _openArtifactDrawer: function(e, detail) {
+                    if (detail.request == 'open'){
+                        this._openartifactdrawer = true;
+                    } else {
+                        this._openartifactdrawer = false;
+                        this.selected = null;
+                    }
+                },
+                _openArtifactSubDrawer: function(e, detail) {
+                    if (detail.request == 'open'){
+                        this._openartifactsubdrawer = true;
+                        this._selectedOperations = detail.selectedOperations;
+                    } else {
+                        this._openartifactsubdrawer = false;
+                    }
+                },
+                _changeContainer: function (c, old) {
+                    this.artifacts = null;
+                    if (c != null) {
+                        this.fire('artifact-drawer', {request: 'close'});
+                        this.fire('artifact-sub-drawer', {request: 'close'});
+//                        this._getArtifacts();
+                    }
+                },
+                _showArtifactDialog: function () {
+                    this.$.createArtifactDialog.show(this._getArtifacts.bind(this));
+                },
+                _deleteArtifact: function (artifact) {
+                    return new Promise(function(resolve, reject) {
+                        codeApi.delete("/artifacts/:artifact_id", {
+                            params: {
+                                "artifact_id": artifact.id,
+                            },
+                        }).then(function (data) {
+                            resolve(data.responce);
+                        }).catch(function (e) {
+                            reject(e);
+                        });
+                    });
+                },
+                _showArtifactDeleteDialog: function (e) {
+                    var self = this;
+                    this.$.deleteDialog.show(function () {
+                        this.$.deleteDialog.close();
+                        self.workingDialogText = this.resource.workingDialogText;
+                        self.$.workingDialog.toggle();
+                        var promises = [];
+                        var targetArtifacts = [];
+                        self.artifacts.forEach(function (artifact) {
+                            if(artifact.enabled){
+                                promises.push(
+                                    self._deleteArtifact(artifact)
+                                );
+                                targetArtifacts.push(artifact);
+                            }
+                        });
+                        Promise.all(promises).then(function () {
+                            targetArtifacts.forEach(function (artifact) {
+                                self.splice("artifacts", self.artifacts.indexOf(artifact), 1);
+                            });
+                            self.messageDialogType = "Success";
+                            self.messageDialogText = this.resource.successfully_created;
+                            self.$.messageDialog.show();
+                        }).catch(function (e) {
+                            console.log(e);
+                            self.messageDialogType = "Error";
+                            self.messageDialogText = this.resource.failed_to_create;
+                            self.$.messageDialog.show();
+                        }).then(function () {
+                            self.$.workingDialog.toggle();
+                        });
+                    },
+                    function () {
+                        self.$.deleteDialog.close();
+                    });
+                },
+                _checkArtifactEnabled: function (artifacts) {
+                    if(!artifacts.base){
+                        return false;
+                    }
+                    var rtn = false;
+                    artifacts.base.forEach(function(artifact){
+                        if(artifact.enabled){
+                            rtn = true;
+                        }
+                    });
+                    return rtn;
+                },
+                _changeSelected: function (val) {
+                    var self = this;
+                    if (!val) {
+                        this.fire('artifact-drawer', {request: 'close'});
+                        return;
+                    }
+                    self.fire('artifact-drawer', {request: 'open'});
+                },
+
+                _getArtifacts: function () {
+                    var self = this;
+                    console.log(this.project_id)
+                    project_id = this.project_id
+
+                    codeApi.get("/projects/:project_id", {
+                        params: {
+                            "project_id": this.project_id
+                        }
+                    }).then(function (data) {
+                        this.set('currentProject',data.res)
+//                        data.res.development="Hogehoge"
+                        this.currentProject=data.res;
+                        console.log(this.currentProject)
+                    }.bind(this));
+
+                    console.log("artifacts ---------------------")
+                    codeApi.get("/projects/:project_id/container", {
+                        params: {
+                            project_id: this.project_id,
+                        }
+                    }).then(function (data) {
+                        self.container_id = data.res;
+                        console.log(data.res)
+                        console.log(data)
+                        console.log(self)
+                        console.log(self.container_id)
+                    });
+
+
+                    self.project_artifacts = [
+                        {"artifact_id":"HxRGJAcy2EKWXnVKoTtgM9FLrlWdUC9yz0MjGCduiPydrUXwAbRspFwVGjVfCGvu",
+                        "lambda_id":"kA81ecz8zwtA6EZBTymrczpZNvyXB6sFvH9e8SewwaZG6nTQ5nTSVWgKeDuMacBH"},
+                        {"artifact_id":"CwxkM3Nwkcv9jjbqaOICANXAKaH0EMIvEpXt971uOeStT4OPsyRg5JMiddbuDRui",
+                            "lambda_id":"kA81ecz8zwtA6EZBTymrczpZNvyXB6sFvH9e8SewwaZG6nTQ5nTSVWgKeDuMacBH"},
+                        {"artifact_id":"yRy7WCU52Xs4xYMpDf1J28B8tcCu6peC8TyqlC5SPo64dLcc5TORlG4dwWLtmtmb",
+                            "lambda_id":"kA81ecz8zwtA6EZBTymrczpZNvyXB6sFvH9e8SewwaZG6nTQ5nTSVWgKeDuMacBH"},
+                        {"artifact_id":"FtMH0S9S2XTpDkWOyyBDm2pRuZnGNVlXMkBTcRVg202bRHqVUoDbyiCkyEhkpg2q",
+                            "lambda_id":"kA81ecz8zwtA6EZBTymrczpZNvyXB6sFvH9e8SewwaZG6nTQ5nTSVWgKeDuMacBH"},
+                        {"artifact_id":"FZ1XnGXi4ta1kYyMgTPkgrAI0x1ulnE6AJNXoKEoGmjncZCwfdGEcj2AmAcea93l",
+                            "lambda_id":"kA81ecz8zwtA6EZBTymrczpZNvyXB6sFvH9e8SewwaZG6nTQ5nTSVWgKeDuMacBH"}
+                    ]
+                    codeApi.get("/projects/:project_id/artifacts",{params:{project_id: self.project_id}}).then(function(data) {
+                        self.project_artifacts = data.response;
+                        return Promise.all(self.project_artifacts.map(function(project_artifact){
+                            return api.get("/dev/lambdas/:lambda_id/artifacts/:artifact_id", {
+                                params: {
+                                    artifact_id: project_artifact.artifact_id,
+                                    lambda_id: project_artifact.lambda_id
+                                }
+                            });
+                        }));
+                    }).then(function(data) {
+                        self.artifacts = []
+                        data.forEach(function(row){
+                            self.push("artifacts",row.response)
+                        })
+                        console.log("mark self.artifacts")
+                        console.log(self.artifacts)
+
+
+                    });
+//                    codeApi.get("/projects/:project_id/artifacts", {
+//                        params: {
+//                            project_id: project_id,
+//                        }
+//                    }).then(function (data) {
+//                        self.artifacts = data.response;
+//                    });
+
+                },
+                getURLParameter: function (name) {
+                    return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+                },
+            });
+        }());
+    </script>
+</dom-module>

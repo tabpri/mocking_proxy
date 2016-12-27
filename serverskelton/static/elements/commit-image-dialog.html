@@ -1,0 +1,114 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/working-dialog.html">
+<link rel="import" href="/static/elements/common/message-dialog.html">
+<link rel="import" href="/static/elements/common/drop-down.html">
+
+
+
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="commit-image-dialog">
+    <template>
+        <style>
+            button-dialog {
+                --button-dialog-overflow: auto;
+            }
+            
+            .dialog-field {
+                margin: 5px 0px;
+            }
+            
+            [vanish] {
+                display: none;
+            }
+        </style>
+
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <message-dialog id="messageDialog" mode="[[messageDialogType]]">[[messageDialogText]]</message-dialog>
+        <working-dialog id="workingDialog">[[workingDialogMessage]]</working-dialog>
+        
+        <button-dialog id="mainDialog">
+            <div class="dialog-title">{{resource.commit_image}}</div>
+            <div class="dialog-body">
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.tag}}</div>
+                    <div class="dialog-field">
+                        <input type="text" class="name" value="{{_tag::input}}">
+                    </div>
+                </div>
+            </div>
+            <div class="buttonArea">
+                <common-button size="B" type="cancel" on-tap="close">{{resource.cancel}}</common-button>
+                <common-button size="B" type="accept" on-tap="_commitImage" disabled$={{!_checkAnd(_tag)}}>{{resource.ok}}</common-button>
+            </div>
+        </button-dialog>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "commit-image-dialog",
+                properties: {
+                    // _container: {
+                    //     type: Object,
+                    //     value: function () {
+                    //         return {};
+                    //     },
+                    // },
+                    _container_id: {
+                        type: String,
+                        value: ''
+                    },
+                },
+                show: function (container_id) {
+                    this._container_id = container_id;
+                    this._tag = "";
+                    this.$.mainDialog.open();
+                },
+                close: function () {
+                    this.$.mainDialog.close()
+                },
+                _commitImage: function () {
+                    this.$.mainDialog.close()
+                    var self = this;
+                    this.workingDialogMessage = this.resource.workingDialogMessage;
+//                    "It is during the commit of the project image. Please wait.";
+                    this.$.workingDialog.toggle();
+                    codeApi.post("/containers/:container_id/commit", {
+                        params: {
+                            container_id: self._container_id,
+                        },
+                        body: {
+                            "tag": self._tag,
+                        }
+                    }).then(function (data) {
+                        console.log(data);
+                        self.messageDialogType = self.resource.success;
+                        self.messageDialogText = self.resource.successfully_created;
+                        self.$.messageDialog.show();
+                    }).catch(function (e) {
+                        console.log(e);
+                        self.messageDialogType = self.resource.error;
+                        self.messageDialogText = self.resource.failed_to_create;
+                        self.$.messageDialog.show();
+                    }).then(function () {
+                        self.$.workingDialog.toggle();
+                    });
+                },
+                _checkAnd: function() {
+                    for (i = 0; i < arguments.length; i++) {
+                        if (!arguments[i]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+            });
+        }());
+    </script>
+</dom-module>

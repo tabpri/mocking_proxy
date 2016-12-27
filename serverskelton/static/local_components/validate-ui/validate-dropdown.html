@@ -1,0 +1,224 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+<link rel="import" href="/static/local_components/i18n-data/localize-behavior.html">
+<link rel="import" href="/static/app/ui/common/flex-label.html">
+<link rel="import" href="/static/app/ui/common/ajax-img.html">
+<link rel="import" href="/static/css/base-styles.html">
+
+<dom-module id="validate-dropdown">
+    <template>
+        <style>
+            ::host {
+                position: relative;
+                width: 100%;
+            }
+
+            .title {
+                margin-bottom: 5px;
+            }
+
+            .messages {
+                margin-bottom: 5px;
+            }
+
+            .notice {
+                color: #ea505c;
+                margin-left: 5px;
+            }
+
+            drop-down .dropdown-content{
+                color: var(--color-font-light-black);
+            }
+            
+            .itemList {
+                color: var(--color-font-light-black);
+            }
+            
+            .itemLabel {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            
+            .itemLabel .itemName{
+                @apply(--layout-flex);
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            
+            flex-label {
+                --flex-label-height: 26px;
+                --flex-label-line-height: 26px;
+                margin-left: 5px;
+            }
+            
+            .dropdown-trigger {
+                border: 1px solid var(--color-border);
+                color: var(--color-font-gray);
+            }
+            
+            .required {
+                width: 6px;
+                height: 16px;
+                color: #ea505c;
+            }
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+        <div class="title">
+            {{title}}
+            <template is="dom-if" if="{{required}}">
+                <ajax-img class="required" src="/static/app/img/icn-global_required.svg"></ajax-img>
+            </template>
+        </div>
+
+        <div class="main">
+            <drop-down class="itemList" vertical-align="top" horizontal-align="left" disabled$="{{disabled}}">
+                <div class="dropdown-trigger itemLabel cursor-pointer">
+                    <flex-label>{{selectedLable}}</flex-label>
+                    <ajax-img class="arrow" src="/static/app/img/icn-arrow4_down.svg"></ajax-img>
+                </div>
+                <div class="dropdown-content">
+                    <template is="dom-repeat" items="{{datas}}">
+                        <div class="itemLabel" on-tap="_select">
+                            <div class="itemName">{{localize(item, dispPath)}}</div>
+                        </div>
+                    </template>
+                </div>
+            </drop-down>
+        </div>
+
+        <div class="messages">
+            <template is="dom-repeat" items="{{errorMessages}}">
+                <div class="notice">{{translate(item)}}</div>
+            </template>
+        </div>
+
+    </template>
+
+    <script>
+        function proplist(items, path, beforeEmpty) {
+            if ((!items) || (items.length <= 0)) {
+                return null;
+            }
+
+            var arr = [];
+            var output = [];
+            if (path) {
+                arr = path.split('.');
+            }
+
+            for (var j = 0; j < items.length; j++) {
+                var item = null;
+                if (arr.length == 0) {
+                        item = items[j];
+                } else {
+                    for (var i=0, len=arr.length; i<len; i++) {
+                        if (items[j] != null) {
+                            item = items[j][arr[i]];
+                        }
+                    }
+                }
+                if (item != null) {
+                    output.push(item);
+                }
+            }
+            if (beforeEmpty) {
+                output.unshift("　");
+            }
+            return output;
+        }
+
+        (function () {
+            Polymer({
+                is: "validate-dropdown",
+                behaviors: [LocalizeBehavior],
+                properties: {
+                    title: {
+                        type: String,
+                    },
+                    datas: {
+                        notify: true,
+                        type: Array,
+                        value: function () { return [];},
+                    },
+                    dispPath: {
+                        type: String,
+                    },
+                    value: {
+                        type: Object,
+                        notify: true,
+                        observer: '_changeValue',
+                    },
+                    invalids: {
+                        type: Array,
+                        notify: true,
+                    },
+                    errorMessages: {
+                        notify: true,
+                        type: Array,
+                        value: function () { return [];},
+                    },
+                    required: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    beforeEmpty: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    disabled: {
+                        type: Boolean,
+                        value: false,
+                    }
+                },
+                setDatas: function(datas) {
+                    this.datas = datas;
+                    this.lists = proplist(this.datas, this.dispPath, this.beforeEmpty);
+                },
+                setApi: function(apiPath) {
+                    var self = this;
+                    api.get(apiPath).then(function (res) {
+                        self.datas = res.response;
+                        self.lists = proplist(self.datas, self.dispPath, self.beforeEmpty);
+                    });
+                },
+                validate: function() {
+                    this.errorMessages = [];
+                    if (this.required && !this.value) {
+                        if (this.invalids.indexOf(this.title) < 0) {
+                            this.push("invalids", this.title);
+                            this.push("errorMessages", "select_msg");
+                        }
+                    } else {
+                        var index = this.invalids.indexOf(this.title);
+                        if (index >= 0) {
+                            this.splice("invalids", index, 1);
+                        }
+                    }
+                },
+                _select: function(e) {
+                    this.value = e.model.item;
+                },
+                _changeValue: function(val) {
+                    // var item = proplist([this.value], this.dispPath);
+                    this.selectedLable = this.localize(val, this.dispPath)
+                    this.validate();
+                },
+                clear: function() {
+                    this.selectedLable = "";
+                    this.value = "";
+
+                    var index = this.invalids.indexOf(this.title);
+                    if (index >= 0) {
+                        this.splice("invalids", index, 1);
+                    }
+                    this.errorMessages = [];
+                },
+                translate: function(item) {
+                    return this.resource[item];
+                }
+            });
+        }());
+    </script>
+</dom-module>

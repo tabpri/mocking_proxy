@@ -1,0 +1,34 @@
+#!/usr/bin/env coffee
+
+require('shelljs/global')
+
+p = (message)->
+  console.error("  "+message)
+
+p "env.OUR_HOST: "
+p process.env.OUR_HOST
+
+HOST = if process.env.OUR_HOST is undefined then 'https://gomphrena-api.optim-test.com' else process.env.OUR_HOST
+TOKEN = if process.env.OUR_TOKEN is undefined then require('./token.json') else process.env.OUR_TOKEN
+
+p HOST
+
+request_filename = process.argv[2]
+request = require(request_filename)
+
+version = request.version
+baseurl = HOST + version
+
+authHeader = "Authorization:Bearer " + TOKEN
+
+header = ' -H \"' + authHeader + '\"' + " -H 'content-type: application/json' "
+method = ' -X ' + request.method
+
+body = ' --data-binary \'' +  JSON.stringify(request.data)  + '\' ' + " --compressed"
+if request.data is undefined
+  body = ''
+
+command = 'curl ' + method + ' ' + baseurl + request.uri + header + body
+
+p command
+exec command

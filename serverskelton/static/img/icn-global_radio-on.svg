@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .\37 f18f7e9-a193-4ee2-b5f0-7747c727095e {
+        fill: none;
+      }
+
+      .b59c34a9-c123-4df0-a1a6-7646456786bb {
+        fill: #fff;
+      }
+
+      .\35 ef7bad0-02ae-463a-95b1-6e5e4f325c10 {
+        fill: #d9d9d9;
+      }
+
+      .\34 177d5c9-6390-4775-baa8-3ebb41d1ebaa {
+        fill: #0e59a5;
+      }
+    </style>
+  </defs>
+  <title>icn-global_radio-on</title>
+  <g id="1d0fa07e-a610-43b2-823c-3f770889827f" data-name="レイヤー 2">
+    <g id="06447957-3498-45ae-8ade-6eafbb20cd54" data-name="レイヤー 1">
+      <g id="7d98a978-94bc-4019-aba8-1ca89d2fbf11" data-name="グローバルアイコン">
+        <g id="ef6cd536-b3f5-421f-8ebf-0371ed487ce1" data-name="icn-global_radio-on">
+          <rect class="7f18f7e9-a193-4ee2-b5f0-7747c727095e" width="300" height="300"/>
+          <g>
+            <g>
+              <path class="b59c34a9-c123-4df0-a1a6-7646456786bb" d="M150.58,279.56A129.92,129.92,0,1,1,280.5,149.64,130.07,130.07,0,0,1,150.58,279.56Z"/>
+              <path class="5ef7bad0-02ae-463a-95b1-6e5e4f325c10" d="M150.58,29.81a119.84,119.84,0,0,1,84.74,204.58A119.84,119.84,0,1,1,65.84,64.9a119.05,119.05,0,0,1,84.74-35.1m0-20.16a140,140,0,1,0,140,140,140,140,0,0,0-140-140Z"/>
+            </g>
+            <circle class="4177d5c9-6390-4775-baa8-3ebb41d1ebaa" cx="150.58" cy="149.64" r="83.28"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

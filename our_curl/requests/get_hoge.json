@@ -1,0 +1,6 @@
+{
+"method":"GET",
+"version":"",
+"uri":"/hoge/",
+"data":{"mem_max":2,"mem_min":1,"cpu_max":2,"cpu_min":1,"is_enabled":false,"is_released":false,"is_cataloged":false,"display_info":[{"language_tag":"en","invalid":true,"display_name":"ff","display_description":"fff"}],"image_id":"z60vspeoln8aqh3hwcbwsq7uohssuf10xg6wng63waq2wwejvqdy99mvradb9n1cartifact","dev_name":"dummy","provider_profile_id":"j4X4YPAxsFf2o66WCZM4wsefl7VLJEU3z8dmxST7KfoXZkgQ6mTG0UTzNiGapuQH"}
+}

@@ -1,0 +1,88 @@
+<link rel="import"  href="/static/bower_components/polymer/polymer.html">
+
+<script>
+(function() {
+
+    Polymer({
+        is: 'item-selector',
+
+        properties: {
+            items: {
+                type: Array,
+                observer: '_itemsChanged'
+            },
+            itemId: {
+                type: String,
+                observer: '_itemIdChanged',
+                notify: true
+            },
+            item: {
+                type: Object,
+                observer: '_itemChanged',
+                notify: true
+            },
+            fetch: Function
+        },
+
+        observers: [
+            '_itemIdChangedReverse(item.id)'
+        ],
+
+        _itemsChanged: function(items) {
+            this.unlinkPaths('item');
+            var itemId = this.itemId;
+            var item = findById(items, itemId);
+            if (item) {
+                this.item = item;
+                this.linkPaths('item', 'items.' + Polymer.Collection.get(items).getKey(item));
+            }
+        },
+
+        _itemIdChanged: function(itemId) {
+            if (this._itemId == itemId) return;
+
+            this.unlinkPaths('item');
+            var items = this.items;
+            var item = findById(items, itemId);
+            if (item) {
+                this.item = item;
+                this.linkPaths('item', 'items.' + Polymer.Collection.get(items).getKey(item));
+            }
+            else if (!itemId) {
+                this.item = null;
+            }
+            else if (this.get('item.id') != itemId) {
+                var me = this;
+                var fetch = this.fetch;
+                if (typeof fetch == 'string') {
+                    fetch = this.domHost[fetch];
+                }
+                Promise.resolve(fetch && fetch.call(this.domHost, itemId)).then(function(item) {
+                    me.item = item || null;
+                });
+            }
+        },
+
+        _itemChanged: function(item) {
+            if (!item || !item.id) {
+                this.itemId = this._itemId = '';
+            }
+        },
+
+        _itemIdChangedReverse: function(itemId) {
+            this.itemId = this._itemId = (itemId != null ? itemId : '');
+        }
+    });
+
+    function findById(items, id) {
+        if (items && id) {
+            for (var i=0; i<items.length; i++) {
+                if (items[i] && items[i].id == id) {
+                    return items[i];
+                }
+            }
+        }
+        return null;
+    }
+}());
+</script>

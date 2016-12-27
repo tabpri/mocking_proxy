@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .abeec43d-2ebc-42d4-b869-135030a2d69f {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>icn-arrow3_back</title>
+  <g id="fe82b005-1f7e-40c0-937a-42f22f3e19a4" data-name="レイヤー 2">
+    <g id="9b340e51-ad7a-479d-a27e-d5762e4864e2" data-name="レイヤー 1">
+      <g id="1ede4162-4108-44cd-a717-e27d27425106" data-name="矢印アイコン">
+        <g id="971fe3b1-0196-42b2-a1bc-b184bd416915" data-name="icn-arrow3_back">
+          <path d="M109.68,150.5H89.75l79.68-78h19.92Zm59.76,80h19.92l-79.68-80H89.75Zm97.06-201v240H32.5V29.5h234m23-20H9.5v280h280V9.5Z"/>
+          <rect class="abeec43d-2ebc-42d4-b869-135030a2d69f" width="300" height="300"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

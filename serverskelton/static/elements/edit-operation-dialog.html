@@ -1,0 +1,247 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/drop-down.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="edit-operation-dialog">
+    <template>
+        <style>
+            button-dialog {
+                --button-dialog-overflow: auto;
+            }
+
+            .slide {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            
+            .slide simple-slider {
+                @apply(--layout-flex);
+            }
+            .unit {
+                @apply(--layout-flex-none);
+            }
+            .dialog-field {
+                margin: 5px 0px;
+            }
+            .border-line {
+                width: 95%;
+                border-bottom: solid 1px #cccccc;
+                margin: 0 8px 20px 8px;
+            }
+            [vanish] {
+                display: none;
+            }
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <button-dialog id="mainDialog">
+            <div class="dialog-title" vanish$={{!_isBrankObject(_opeation)}}>{{resource.add_operation}}</div>
+            <div class="dialog-title" vanish$={{_isBrankObject(_opeation)}}>{{resource.edit_operation}}</div>
+            <div class="dialog-body">
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.name}}</div>
+                    <div class="dialog-field">
+                        <input type="text" class="name" value="{{_opName::input}}">
+                    </div>
+                </div>
+                
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.description}}</div>
+                    <div class="dialog-field">
+                        <textarea rows="7" value="{{_opDescription::input}}"></textarea>
+                    </div>
+                </div>
+                
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.memory}}&nbsp;(Max:[[_opMemMax]]MB)</div>
+                    <div class="dialog-field">
+                        <div class="slide">
+                            <simple-slider unit="MB" min="[[_opMemMin]]" max="[[_opMemMax]]" value="{{_opMem}}" step="[[_validate.mem_step]]"></simple-slider>
+                        </div>
+                    </div>
+                </div>
+                <div class="border-line"></div>
+                
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.cpu}}</div>
+                    <div class="dialog-field">
+                        <div class="slide">
+                            <simple-slider unit="%" min="[[_opCpuMin]]" max="[[_opCpuMax]]" value="{{_opCpu}}" step="[[_validate.cpu_step]]"></simple-slider>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="buttonArea">
+                <common-button size="B" type="cancel" on-tap="close">{{resource.cancel}}</common-button>
+                <common-button size="B" type="accept" on-tap="_create" vanish$={{!_isBrankObject(_opeation)}} disabled$={{!checkAnd(_opName,_opDescription,_opCpu,_opMem)}}>{{resource.ok}}</common-button>
+                <common-button size="B" type="accept" on-tap="_edit" vanish$={{_isBrankObject(_opeation)}} disabled$={{!checkAnd(_opName,_opDescription,_opCpu,_opMem)}}>{{resource.ok}}</common-button>
+            </div>
+        </button-dialog>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "edit-operation-dialog",
+                properties: {
+                    callbackApiSuccessed: {
+                        type: Function,
+                        value: function (data) {
+                            console.log(data);
+                        }
+                    },
+                    callbackCancel: {
+                        type: Function,
+                    },
+                    _artifact: {
+                        type: Object,
+                        value: function () {
+                            return {};
+                        },
+                    },
+                    _opeation: {
+                        type: Object,
+                        value: function () {
+                            return {};
+                        },
+                    },
+                    _validate: {
+                        type: Object,
+                        value: function () { return config.cloud_runtime.artifact.validate; },
+                    },
+                },
+                show: function (opeation, artifact, callbackApiSuccessed) {
+                    if (typeof callbackApiSuccessed == "function"){
+                        this.callbackApiSuccessed = callbackApiSuccessed;
+                    }
+                    this._artifact = artifact;
+                    if(opeation){
+                        this.set("_opeation", opeation);
+                        this._title = "edit opeation";
+                        this._opCpuMax = this._artifact.cpu_max * 100;
+                        this._opCpuMin = this._artifact.cpu_min * 100;
+                        this._opCpu = this._opeation.cpu * 100;
+                        this._opMemMax = this._artifact.mem_max;
+                        this._opMemMin = this._artifact.min_mem;
+                        this._opMem = this._opeation.mem;
+                        this._opName = this._opeation.name;
+                        this._opDescription = this._opeation.description;
+                        this.$.mainDialog.open();
+                    } else {
+                        this.set("_opeation", {});
+                        this._title = "create opeation";
+                        this._opCpuMax = this._artifact.cpu_max * 100;
+                        this._opCpuMin = this._artifact.cpu_min * 100;
+                        this._opCpu = this._opCpuMin;
+                        this._opMemMax = this._artifact.mem_max;
+                        this._opMemMin = this._artifact.min_mem;
+                        this._opMem = this._opMemMin;
+                        this._opName = "";
+                        this._opDescription = "";
+                        this.$.mainDialog.open();
+                    }
+                },
+                close: function () {
+                    this.$.mainDialog.close();
+                },
+                _create: function (e) {
+                    var self = this;
+                    this.$.mainDialog.close();
+                    console.log("mark 1 _create edit-operation-dialog")
+                    console.log(self._artifact)
+                    console.log(self._artifact.version)
+
+                    api.post("/dev/lambdas/:lambda_id/operations", {
+                        params: {
+                            lambda_id: self._artifact.lambda_id,
+                        },
+                        body: {
+                            artifact_id: self._artifact.id,
+//                            artifact_version: self._artifact.version,
+                            artifact_version: 1,
+                            is_enabled: true,
+                            is_released: true,
+                            is_cataloged: false,
+                            display_owner_group_name: "--", // @TODO!
+                            display_owner_name: "--",
+
+                            key: Math.random().toString(36).slice(-24),
+                            name: self._opName,
+                            description: self._opDescription,
+                            cpu: self._opCpu / 100,
+                            mem: parseFloat(self._opMem),
+//                            sdn_name: self._opSdnName,
+                            required_options: [],
+                            port_maps: [], //self.$.opPorts.value,
+                            exec_type: "daemon", //self.$.opExecType.value,
+                            job_schedule: null, //self.$.opJobSchedule.value,
+                            config_schema: {},
+                        }
+                    }).then(function (data) {
+                        return api.get("/dev/lambdas/:lambda_id/operations/:operation_id", {
+                            params: {
+                                "lambda_id": self._artifact.lambda_id,
+                                "operation_id": data.response.id,
+                            }
+                        });
+                    }).then(this.callbackApiSuccessed
+                    ).catch(function (e) {});
+                },
+                _edit: function () {
+                    var self = this;
+                    this.$.mainDialog.close();
+                    api.patch("/dev/lambdas/:lambda_id/operations/:operation_id", {
+                        params: {
+                            lambda_id: self._artifact.lambda_id,
+                            operation_id: self._opeation.id,
+                        },
+                        body: {
+                            artifact_id: self._artifact.id,
+                            artifact_version: self._artifact.version,
+                            key: Math.random().toString(36).slice(-24),
+                            name: self._opName,
+                            description: self._opDescription,
+                            cpu: parseFloat(self._opCpu / 100),
+                            mem: parseFloat(self._opMem),
+//                            sdn_name: self._opSdnName,
+                            required_options: [],
+                            port_maps: [], //self.$.opPorts.value,
+                            exec_type: "DAEMON", //self.$.opExecType.value,
+                            job_schedule: "", //self.$.opJobSchedule.value,
+                            config_schema: {},
+                        }
+                    }).then(function (data) {
+                        return api.get("/dev/lambdas/:lambda_id/operations/:operation_id", {
+                            params: {
+                                "lambda_id": self._artifact.lambda_id,
+                                "operation_id": data.response.id,
+                            }
+                        });
+                    }).then(this.callbackApiSuccessed
+                    ).catch(function (e) {
+                        console.log(e);
+                    });
+                },
+                checkAnd: function() {
+                    for (i = 0; i < arguments.length; i++) {
+                        if (!arguments[i]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                _isBrankObject: function (obj) {
+                    if(Object.keys(obj).length){
+                        return false;
+                    }
+                    return true;
+                }
+            });
+        }());
+    </script>
+</dom-module>

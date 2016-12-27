@@ -1,0 +1,143 @@
+<link rel="import"  href="i18n.html">
+<script src="lib/intl-messageformat.min.js"></script>
+<script>
+(function() {
+
+    var _formats = {
+        number: {
+            jpy: {
+                style: 'currency',
+                currency: 'JPY'
+            },
+            usd: {
+                style: 'currency',
+                currency: 'USD'
+            }
+        },
+        date: {
+            medium: {
+                month: 'numeric',
+                day: 'numeric',
+                year: 'numeric'
+            }
+        }
+    };
+
+    var _cache = {};
+
+    function localizeMsg(locales, msg, vals) {
+        if (typeof vals == 'string') {
+            var args = [].slice.call(arguments, 2);
+            vals = {};
+            for (var i = 0; i < args.length; i += 2) {
+                vals[args[i]] = args[i+1];
+            }
+        }
+        var locale = locales[0];
+        var key = locale + msg;
+        var fmt = _cache[key];
+        if (!fmt) {
+            fmt = _cache[key] = new IntlMessageFormat(msg, locale, _formats);
+        }
+        return fmt.format(vals);
+    }
+
+    function findProp(obj) {
+        var names = [].slice.call(arguments, 1);
+        var cache;
+        function find(obj, name) {
+            if (obj instanceof Object && cache.indexOf(obj) < 0) {
+                cache.push(obj);
+                if (name in obj) return obj[name];
+                for (var k in obj) {
+                    var v = find(obj[k], name);
+                    if (v !== undefined) return v;
+                }
+            }
+        }
+        for (var i=0; i<names.length; i++) {
+            var name = names[i];
+            cache = [];
+            var val = find(obj, name);
+            if (val !== undefined) {
+                return val;
+            }
+        }
+    }
+
+    function localizeObject(locales, obj) {
+        var names = [].slice.call(arguments, 2);
+        var resources = (obj instanceof Array) ? obj : (findProp(obj, 'display_info') || []);
+        var langRes = {};
+
+        resources.forEach(function(r) {
+            var lang = I18n.normalizeLanguage(r.language_tag);
+            if (!langRes[lang]) {
+                langRes[lang] = r;
+            }
+        });
+
+        for (var i=0; i<locales.length; i++) {
+            var locale = locales[i];
+            var val = findProp.apply(null, [langRes[locale]].concat(names));
+            if (val !== undefined) {
+                return val;
+            }
+        }
+
+        var locale = Object.keys(langRes)[0];
+        if (locale) {
+            var val = findProp.apply(null, [langRes[locale]].concat(names));
+            if (val !== undefined) {
+                return val;
+            }
+        }
+
+        return findProp.apply(null, [obj].concat(names));
+    }
+
+    window.LocalizeBehavior = {
+
+        properties: {
+            locales: {
+                type: Array,
+                value: function() {return I18n.languages}
+            },
+            localize: {
+                type: Function,
+                computed: '_computeLocalize(locales)'
+            }
+        },
+
+        attached: function() {
+            this.listen(window, 'languages-changed', '_languageChanged');
+        },
+
+        detached: function() {
+            this.unlisten(window, 'languages-changed', '_languageChanged');
+        },
+
+        _languageChanged: function(e) {
+            this.locales = e.detail.value;
+        },
+
+        _computeLocalize: function(locales) {
+            return function(value) {
+                if (locales.length == 0) {
+                    return '';
+                }
+                var returnValue;
+                var args = [locales].concat([].slice.call(arguments));
+                if (value instanceof Object) {
+                    returnValue = localizeObject.apply(null, args);
+                }
+                else if (value) {
+                    returnValue = localizeMsg.apply(null, args);
+                }
+                return returnValue == null ? '' : returnValue;
+            };
+        }
+    };
+
+}())
+</script>

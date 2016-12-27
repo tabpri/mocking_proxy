@@ -1,0 +1,5 @@
+{
+"uri":"/dev/provider_profiles",
+"method":"GET",
+"version":"/v1"
+}

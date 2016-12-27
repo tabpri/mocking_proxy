@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .e68ac3e3-61a6-4020-ad2b-aa6eef95297a {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>icn-code_search-txt</title>
+  <g id="0224d2fa-5174-4f38-98bc-6ce7068647ff" data-name="レイヤー 2">
+    <g id="4f57e365-47f7-4e41-bde1-f65de8ac4490" data-name="レイヤー 1">
+      <g id="eebac35d-cba2-4d35-8936-641e173a4d65" data-name="codeアイコン">
+        <g id="d715af83-fcaf-4614-a871-fe508aef9e58" data-name="icn-code_search-txt">
+          <rect class="e68ac3e3-61a6-4020-ad2b-aa6eef95297a" width="300" height="300"/>
+          <path d="M120.51,243.41H63.46L51.1,288.57H15.44L71.78,112.66h41.36l56.58,175.91H132.88Zm-7.61-27.34-5.23-19.25c-5.47-18.3-10.22-38.51-15.45-57.53h-1c-4.52,19.25-9.75,39.22-15,57.53l-5.23,19.25ZM282.2,244l-76.71-76.71A104.64,104.64,0,1,0,38.21,185l10.16-29.8A78.53,78.53,0,1,1,147.25,186l8.43,24.79a106.16,106.16,0,0,0,12.79-6.43l76.71,76.71a26.18,26.18,0,0,0,37-37Z"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

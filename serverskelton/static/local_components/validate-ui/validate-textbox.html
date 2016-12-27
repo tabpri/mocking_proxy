@@ -1,0 +1,121 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+<link rel="import" href="/static/app/ui/common/ajax-img.html">
+<link rel="import" href="validate-rules.html">
+
+<dom-module id="validate-textbox">
+    <template>
+        <style>
+            ::host {
+                position: relative;
+                width: 100%;
+            }
+
+            .title {
+                margin-bottom: 5px;
+            }
+            
+            .inputArea {
+                height: 26px;
+                padding: 0px 5px;
+                background-color: white;
+                border: solid 1px var(--color-border);
+            }
+            
+            input {
+                position: relative;
+                width: 100%;
+                height: 24px;
+                border: none;
+                outline: 0;
+                background-color: transparent;
+            }
+
+            .messages {
+                margin-bottom: 5px;
+            }
+
+            .notice {
+                color: #ea505c;
+                margin-left: 5px;
+            }
+
+            .required {
+                width: 6px;
+                height: 16px;
+                color: #ea505c;
+            }
+/*
+            .messages > div:nth-last-of-type(1) {
+                margin-bottom: 5px;
+            }
+*/
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+        <div class="title">
+            {{title}}
+            <template is="dom-if" if="{{required}}">
+                    <ajax-img class="required" src="/static/app/img/icn-global_required.svg"></ajax-img>
+            </template>
+        </div>
+
+        <div class="inputArea">
+            <input is="validate-rules" id="rule" invalids="{{invalids}}" error-messages="{{errorMessages}}" valid-type="{{validType}}" value="{{value}}" title="{{title}}" focus-out="{{focusOut}}">
+        </div>
+
+        <div class="messages">
+            <template is="dom-repeat" items="{{errorMessages}}">
+                <div class="notice">{{translate(item)}}</div>
+            </template>
+        </div>
+        
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "validate-textbox",
+                properties: {
+                    validType: {
+                        type: String,
+                    },
+                    title: {
+                        type: String,
+                    },
+                    value: {
+                        type: String,
+                        notify: true,
+                    },
+                    invalids: {
+                        type: Array,
+                        notify: true,
+                    },
+                    errorMessages: {
+                        notify: true,
+                        type: Array,
+                        value: function () { return [];},
+                    },
+                    required: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    focusOut: {
+                        type: Boolean,
+                        value: false,
+                    }
+                },
+                validate: function() {
+                    this.$.rule.validate();
+                },
+                clear: function() {
+                    this.$.rule.clear();
+                    this.value = null;
+                },
+                translate: function(item) {
+                    return this.resource[item];
+                }
+            });
+        }());
+    </script>
+</dom-module>

@@ -1,0 +1,170 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/paper-slider/paper-slider.html">
+<link rel="import" href="/static/elements/common/spin-box.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+        
+<dom-module id="simple-slider">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            :host {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            spin-box {
+                @apply(--layout-horizontal);
+            }
+            .slider {
+                @apply(--layout-flex);
+                margin-bottom: 30px;
+            }
+            
+            .slider-fild {
+                @apply(--layout-horizontal);
+                position: relative;
+                margin: 10px 8px;
+                height: 4px;
+                background-color: #cccccc;
+                -webkit-border-top-left-radius: 30px;  
+                -webkit-border-top-right-radius: 30px;  
+                -webkit-border-bottom-right-radius: 30px;  
+                -webkit-border-bottom-left-radius: 30px;  
+ 
+            }
+            .slider-selected-fild {
+                position: relative;
+                background-color: #0071bc;
+                left: 0;
+                height: 4px;
+                -webkit-border-top-left-radius: 30px;  
+                -webkit-border-top-right-radius: 30px;  
+                -webkit-border-bottom-right-radius: 30px;  
+                -webkit-border-bottom-left-radius: 30px;  
+            }
+            
+            .slider-thumb {
+                position: absolute;
+                color: #0071bc;
+                transform: translate(-45%, 10%);
+            }
+            .unit {
+                @apply(--layout-flex-none);
+                color: #a2a2a2;
+                margin: auto 0 auto 10px;
+            }
+            .label {
+                @apply(--layout-flex-none);
+                margin: auto 10px auto 0;
+            }
+            .slider-input-area {
+                width: 100%;
+            }
+            .slider-input-title {
+                @apply(--layout-horizontal);
+                margin-bottom: 20px;
+            }
+ 
+        </style>
+        <div class="slider-input-area">
+            <div class="slider-input-title">
+                <div class="label">[[label]]</div>
+                <spin-box min="[[_min(min,max)]]" max="[[_max(min,max)]]" value="{{_spinBoxValue}}" step="[[step]]"></spin-box>
+                <div class="unit">[[unit]]</div>
+            </div>
+            <div class="slider" id="slider" on-down="_trackThumb" on-track="_trackThumb">
+                <div class="slider-fild" id="sliderFild">
+                    <div class="slider-selected-fild" style$="width: {{_thumbMarginLeft}}%"></div>
+                    <ajax-img class="slider-thumb cursor-pointer" id="sliderThumb" src="/static/img/icn-global_bar-ctrl.svg" style$="left: {{_thumbMarginLeft}}%"></ajax-img>
+                </div>
+            </div>
+        </div>
+    </template>
+ 
+    <script>
+        (function () {
+            Polymer({
+                is: "simple-slider",
+                properties: {
+                    min: {
+                        type: Number,
+                        value: 0,
+                    },
+                    max: {
+                        type: Number,
+                        value: 100,
+                    },
+                    _thumbMarginLeft: {
+                        type: Number,
+                    },
+                    _spinBoxValue: {
+                        type: Number,
+                        observer: '_spinBoxValueChanged'
+                    },
+                    value: {
+                        type: Number,
+                        notify: true,
+                        observer: '_valueChanged'
+                    },
+                    step: {
+                        type: Number,
+                        value: 1,
+                    },
+                },
+                _min: function () {
+                    return Math.min.apply(Math, arguments);
+                },
+                _max: function () {
+                    return Math.max.apply(Math, arguments);
+                },
+                _spinBoxValueChanged: function(val) {
+                    this.value = Math.min(Math.max(Number(val), this.min), this.max);
+                },
+                _valueChanged: function(val) {
+                    this._spinBoxValue = Number(val);
+                    
+                    var thumbMarginLeft = Math.round((val - this.min) / (this.max - this.min) * 100);
+                    if(thumbMarginLeft < 0){
+                        thumbMarginLeft = 0;
+                    }
+                    if(thumbMarginLeft > 100){
+                        thumbMarginLeft = 100;
+                    }
+                    this._thumbMarginLeft = thumbMarginLeft;
+                },
+                _trackThumb: function (e) {
+                    if(e.type == "down" && Polymer.dom(e).path.indexOf(this.$.sliderThumb) >= 0){
+                        return;
+                    }
+                    var sliderRect = this.$.sliderFild.getBoundingClientRect();
+                    var thumbRect = e.currentTarget.getBoundingClientRect();
+                    var thumbX = e.detail.x - sliderRect.left;
+                    if(thumbX < 0){
+                        thumbX = 0;
+                    }
+                    if(thumbX > sliderRect.width){
+                        thumbX = sliderRect.width;
+                    }
+                    
+                    var rate = thumbX / sliderRect.width;
+                    this.value = Math.floor((this.max - this.min) * rate / this.step) * this.step + this.min;
+                },
+                _tapSliderFild: function (e) {
+                    console.log(e);
+                },
+                _oninput: function (e) {
+                    if (!e.currentTarget.validity.valid) {
+                        e.target.value = this.min;
+                        return;
+                    }
+                    if(this.min > e.target.value){
+                        e.target.value = this.min;
+                    }
+                    if(this.max < e.target.value){
+                        e.target.value = this.max;
+                    }
+                },
+            });
+        }());
+    </script>
+</dom-module>

@@ -1,0 +1,395 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/drawer-panel.html">
+<link rel="import" href="/static/elements/common/panel-box.html">
+
+<link rel="import" href="/static/elements/edit-operation-dialog.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+<link rel="import" href="/static/local_components/display-info/summary-item-displayinfo.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+<dom-module id="artifact-drawer">
+    <style include="base-styles"></style>
+    <style>
+        :host {
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 500px;
+        }
+        
+        .operation_list_panel {
+            --panel-box-body-style: {
+                padding: 0px;
+            }
+        }
+
+        .space {
+            height: 10px;
+        }
+
+        .listItem {
+            padding-left: 15px;
+            @apply(--layout-horizontal);
+            height: 30px;
+        }
+
+        .listItem:first-child {
+            margin-top: 10px;
+        }
+
+        .listItem label {
+            @apply(--layout-flex);
+            @apply(--layout-horizontal);
+            height: 100%;
+        }
+        
+        .listItem .mark {
+            position: relative;
+            margin-left: 4px;
+            margin-right: 4px;
+            width: 24px;
+            height: 30px;
+        }
+
+        .listItem .mark > ajax-img {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            margin: auto;
+            color: #0071bc;
+        }
+        
+        .listItem.iron-selected {
+            background-color: #cce4e6;
+        }
+
+        .menu_bar {
+            @apply(--layout-horizontal);
+            width: 100%;
+            height: 50px;
+        }
+        
+        .menu_bar common-button {
+            width: 110px;
+            margin-right: 20px;
+            margin-left: auto;
+            margin-top: 14px;
+        }
+
+        .d_header_title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .p_body > .caption {
+            font-weight: bold;
+            color: var(--code-color-font-thingray);
+        }
+
+        .p_body > .name {
+            height: 30px;
+        }
+
+        .p_body > .description {
+            margin: 10px 0px 15px 10px;
+            padding: 0px;
+            line-height: 1.6em;
+            overflow-y: auto;
+            word-wrap: break-word;
+        }
+        
+        .p_body > .range {
+            margin: 10px 0px 15px 5px;
+        }
+        .p_body > .range:last-child {
+            margin: 10px 0px 0px 5px;
+        }
+
+        .p_body > .range > * {
+            display: inline;
+        }
+        
+        .p_body > .range > #note {
+            color: var(--code-color-font-thingray);
+            margin: 0px 5px;
+        }
+
+        .p_body > .range > #splitter {
+            margin: 0px 10px;
+        }
+
+        .floating_panel {
+            @apply(--layout-horizontal);
+            margin: 20px;
+            background-color: var(--code-color-list-base);
+        }
+        .floating_panel > .back_button {
+        }
+        
+        .floating_panel > .edit_button {
+            margin-left: auto;
+            margin-right: 20px;
+        }
+        
+    </style>
+
+
+    <template>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <edit-operation-dialog id="operationDialog"></edit-operation-dialog>
+
+        <drawer-panel>
+            <div class="d_header_title">{{selectedArtifact.id}}</div>
+            <div class="d_header_right">
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-global_close.svg"  on-tap="_close"></ajax-img>
+            </div>
+
+            <div class="d_body">
+                
+                <panel-box class="main_panel">
+                    <div class="p_title">{{resource.information}}</div>
+                    <div class="p_body">
+                        <div class="caption">{{resource.description}}</div>
+                        <div class="description">{{selectedArtifact.description}}</div>
+
+                        <template is="dom-repeat" items="{{displays}}">
+
+                            <i18n-data value="{{resource}}"></i18n-data>
+                            <!--<div class="language-area">-->
+                                <div class="language">
+                                    {{_localizeLang(item.language_tag, resource)}}
+                                </div>
+                                <!--<div class="content">-->
+                                    <template is="dom-repeat" items="{{item.values}}">
+                                        <!--<div class="kv">-->
+                                            <template is="dom-if" if="{{_eqImageUrl(item.key)}}">
+                                                <div class="caption">
+                                                    <div class="key">
+                                                        {{resource.icon}}
+                                                    </div>
+                                                </div>
+                                                <div class="value">
+                                                    <ajax-img id="icon" src="{{item.value}}" default="/static/app/img/icn-desktop_apps.svg" style="width:120px;height:120px;">
+                                                </div>
+                                            </template>
+                                            <template is="dom-if" if="{{!_eqImageUrl(item.key)}}">
+                                                <div class="caption">
+                                                    <!--<div class="key">-->
+                                                        {{_localizeKey(item.key, resource)}}
+                                                    <!--</div>-->
+                                                </div>
+                                                <div class="description">
+                                                    {{item.value}}
+                                                </div>
+                                            </template>
+                                        <!--</div>-->
+                                    </template>
+                                <!--</div>-->
+                            <!--</div>-->
+
+
+                        </template>
+                        <div class="space"></div>
+
+
+                        <div class="caption">{{resource.mem}}</div>
+                        <div class="range">
+                            <p id="note">{{resource.max}}</p>
+                            <p id="value">{{selectedArtifact.mem_max}}</p>
+                            <p id="note">{{resource.mb}}</p>
+                            <p id="splitter">&#45;</p>
+                            <p id="note">{{resource.min}}</p>
+                            <p id="value">{{selectedArtifact.mem_min}}</p>
+                            <p id="note">{{resource.mb}}</p>
+                        </div>
+
+                        <div class="caption">{{resource.cpu}}</div>
+                        <div class="range">
+                            <p id="note">{{resource.max}}</p>
+                            <p id="value">{{selectedArtifact.cpu_max}}</p>
+                            <p id="note">&#37;</p>
+                            <p id="splitter">&#45;</p>
+                            <p id="note">{{resource.min}}</p>
+                            <p id="value">{{selectedArtifact.cpu_min}}</p>
+                            <p id="note">&#37;</p>
+                        </div>
+
+                    </div>
+                </panel-box>
+                
+                <div class="space"></div>
+                
+                <panel-box class="operation_list_panel">
+                    <div class="p_title">{{resource.operation_list}}</div>
+                    <div class="p_body">
+                        <template is="dom-repeat" items="{{operations}}" sort="sortOperations">
+                            <div class="listItem" value="{{item}}">
+                                <label><flex-label>{{item.name}}</flex-label></label>
+                                <div class="mark">
+                                    <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-global_link.svg"  on-tap="onTapOperation"></ajax-img>
+                                </div>
+                            </div>
+                        </template>
+                        <div class="menu_bar">
+                            <common-button size="A" type="add" on-tap="showCreateOperationDialog">{{resource.add}}</common-button>
+                        </div>
+                    </div>
+                </panel-box>
+            </div>
+            <div class="d_footer">
+                <div class="floating_panel">
+                    <common-button class="edit_button" size="B" type="add" on-tap="_edit" disabled>{{resource.edit}}</common-button>
+                </div>
+            </div>
+        </drawer-panel>
+    </template>
+
+    <script>
+        (function() {
+            Polymer({
+                is: 'artifact-drawer',
+                properties: {
+                    selectedArtifact: {
+                        type: Object,
+                        observer: 'changeSelectArtifact'
+                    },
+                    selectedOperation: {
+                        type: Object,
+                        notify: true,
+                    },
+                    operations: {
+                        type: Object,
+                        notify: true,
+                    },displayinfos: {
+                        type: Array,
+                        notify: true
+                    },
+                },
+                changeSelectArtifact: function (val) {
+                    this._changeDisplayInfo()
+                    this.selectedOperation = null;
+                    if (val) {
+                        this._getOperations();
+                    }
+                },
+                _close: function () {
+                    this.fire('artifact-drawer', {request: 'close'});
+                },
+                sortOperations: function(a,b) {
+                    var aLow = a.name.toLowerCase();
+                    var bLow = b.name.toLowerCase();
+                    if( aLow < bLow ) return -1;
+                    if( aLow > bLow ) return 1;
+                    return 0;
+                },
+                onTapOperation: function (e) {
+                    var self = this;
+                    self.selectedOperation = e.model.item;
+                    this.fire('artifact-sub-drawer', {request: 'open'});
+                },
+                showCreateOperationDialog: function (e) {
+                    var self = this;
+                    // @todo developer_centor_base_url should be set
+                    var developer_centor_base_url = "https://gomphrena-developer.optim-test.com/"
+                    var operation__add_uri = "lambdas/" + self.selectedArtifact.lambda_id + "/operations?route=_add"
+                    operation_add_url_in_develoer_centor = developer_centor_base_url + operation__add_uri
+                    window.open(operation_add_url_in_develoer_centor, '_blank');
+
+
+                },
+                _edit: function () {
+                    // Artifactの編集用
+                },
+                _getOperations: function () {
+                    var self = this;
+                    return api.get("/dev/lambdas/:lambda_id/operations", {
+                        params: {
+                            lambda_id: self.selectedArtifact.lambda_id,
+                        }
+                    }).then(function (data) {
+                        self.operations = data.response.filter(function(val) {
+                            return (val.artifact_id == self.selectedArtifact.id);
+                        });
+                    });
+                },mock: function(){
+                    displayInfos = []
+                    display_info = {
+                        language_tag:"fn",
+                        hogehoge:"foo bar",
+                        name:"name content",
+                        descrioption:"hogehoge aaa",
+                        more_attribute:"yes"
+                    }
+
+                    displayInfos.push(display_info)
+                    display_info = {
+                        language_tag:"en",
+                        hogehoge:"foo bar english",
+                        name:"name content",
+                        descrioption:"hogehoge aaa",
+                        more_attribute:"yes"
+                    }
+                    displayInfos.push(display_info)
+
+//                    this.selectedArtifact.display_info = displayInfos;
+
+                },
+
+
+
+                // @todo copy and paste code from summary-item-displayinfo.html element
+                _changeDisplayInfo: function() {
+                    this.mock() //@todo mocking here
+//                    this.displayinfos = this.selectedArtifact.display_info;
+                    if (!this.displayinfos) {
+                        return;
+                    }
+                    this.displays = [];
+                    this.displayinfos.forEach(function(displayinfo) {
+                        var languageinfo = {};
+                        languageinfo.language_tag = displayinfo.language_tag;
+                        languageinfo.values = [];
+                        for(key in displayinfo) {
+                            if (key == 'language_tag') {
+                                continue;
+                            }
+                            var values = {};
+                            values.key = key;
+                            values.value = displayinfo[key];
+                            languageinfo.values.push(values);
+                        }
+                        this.push('displays', languageinfo);
+                    }.bind(this));
+                },
+                _localizeLang: function(lang, i18n) {
+                    lang = CIOS.utils.normalizeLanguage(lang);
+                    var name = i18n && i18n.languages[lang];
+                    return name || lang;
+                },
+                _localizeKey : function(key, i18n) {
+                    var name = i18n && i18n[key];
+                    return name || key;
+                },
+
+                _eqImageUrl: function(key) {
+                    if (key == 'image_url') {
+                        return true;
+                    }
+                    return false;
+                },
+
+
+            });
+        }());
+    </script>
+</dom-module>

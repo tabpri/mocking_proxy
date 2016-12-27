@@ -1,0 +1,38 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="../common/ajax-img.html">
+<link rel="import" href="table-common.html">
+<link rel="import" href="column-header.html">
+
+<dom-module id="image-column">
+    <style include="table-column-style">
+    </style>
+
+    <template>
+        <column-header class="header" table="{{_table}}" label="{{label}}" order="{{order}}"></column-header>
+        <div id="rows" scroll-top="[[_table.scrollTop]]">
+            <template id="repeater" is="dom-repeat" items="{{_table.items}}" sort="{{_table.sort}}" filter="{{_table.filter}}">
+                <div class="row" status$="[[_status(_table.row.*, item.*)]]">
+                    <ajax-img src="{{_value(item.*, path, src)}}" api="{{_value(item.*, path, api)}}" default="{{default}}" nested style$="width:{{size}}px;height:{{size}}px"></ajax-img>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'image-column',
+
+            behaviors: [ListTable.ColumnBehavior],
+
+            properties: {
+                api: String,
+                src: String,
+                default: String,
+                size: {
+                    type: Number,
+                    value: 24
+                }
+            }
+        });
+    </script>
+</dom-module>

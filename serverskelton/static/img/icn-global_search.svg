@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .\30 43c3343-9c9f-4fc2-8444-6f5eb5093b60 {
+        fill-rule: evenodd;
+      }
+
+      .d3c4fee6-b2fe-4b13-9d6f-fc0377645ac8 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>icn-global_search</title>
+  <g id="f3f8b5b0-8b39-4e24-8f49-e39a28987576" data-name="レイヤー 2">
+    <g id="3a8e947e-80d0-4918-ada6-f4e3487f6019" data-name="レイヤー 1">
+      <g id="1ff2d367-3bee-4660-9183-966e5ab2c852" data-name="icn-global_search">
+        <path id="df5fd5fb-b042-4ebe-96f1-08641163112f" data-name="Sarch" class="043c3343-9c9f-4fc2-8444-6f5eb5093b60" d="M281.7,244.55a26.18,26.18,0,1,1-37,37h0L168,204.85a105,105,0,1,1,37-37l76.71,76.71ZM114.87,36.2a78.53,78.53,0,1,0,78.53,78.53A78.53,78.53,0,0,0,114.87,36.2Z"/>
+        <rect class="d3c4fee6-b2fe-4b13-9d6f-fc0377645ac8" width="300" height="300"/>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,193 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/static/bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+
+<link rel="import" href="/static/elements/common/tab-bar.html">
+<link rel="import" href="/static/elements/term-ui.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+
+<dom-module id="term-viewer">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            .termTab {
+                @apply(--common-parts-tab);
+                flex: 0 1 190px;
+            }
+            
+            .termTab.iron-selected {
+                background-color: var(--code-color-tab-background-active);
+                color: var(--code-color-font-white);
+            }
+            
+            .termTab .type-icon {
+                display: none;
+                margin-right: 5px;
+            }
+            
+            .termTab .type-icon[show] {
+                display: block;
+            }
+            
+            .termTab .close {
+                margin-left: 5px;
+            }
+            
+            .term {
+                @apply(--layout-flex-auto);
+            }
+            
+            flex-label {
+                --flex-label-font-size: 14px;
+            }
+            
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <tab-bar tab-list="{{tabList}}" selected-tab-id="{{selectedTabIndex}}">
+            <template is="dom-repeat" items="{{tabList}}">
+                <div class="termTab">
+                    <ajax-img class="type-icon icon-s" src="/static/img/icn-code_console.svg" show$="{{_eq(item.type, 'tarm')}}"></ajax-img>
+                    <ajax-img class="type-icon icon-s" src="/static/img/icn-code_debug.svg" show$="{{_eq(item.type, 'task')}}"></ajax-img>
+                    <flex-label>{{item.name}}</flex-label>
+                    <ajax-img class="close icon-s cursor-pointer" src="/static/img/icn-global_close.svg" on-tap="deleteTab"></ajax-img>
+                </div>
+            </template>
+        </tab-bar>
+        <iron-pages selected="{{selectedTabIndex}}" hidden="[[isHiddenTab]]">
+            <template is="dom-repeat" items="{{tabList}}">
+                <term-ui class="term" websocket_url="{{item.websocket_url}}"></term-ui>
+            </template>
+        </iron-pages>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "term-viewer",
+                properties: {
+                    task: {
+                        type: Object,
+                        observer: "runTask",
+                    },
+                    tabList: {
+                        type: Array,
+                        value: function () {
+                            return [];
+                        },
+                    },
+                },
+                attached: function() {
+                    this.listen(document.body, "launch-tarm", "launchTarm");
+                    this.listen(document.body, "run-task", "runTask");
+                    this.listen(document.body, "close-tabs", "deleteTabs");
+                },
+                detached: function() {
+                    this.unlisten(document.body, "launch-tarm", "launchTarm");
+                    this.unlisten(document.body, "run-task", "runTask");
+                    this.unlisten(document.body, "close-tabs", "deleteTabs");
+                },
+                ready: function() {
+                    this.isHiddenTab = false;
+                },
+                selectRadioTaskRunner: function () {
+                    this.$.radioTaskRunner.checked = (this.$.radioTaskRunner.checked ? false : true);
+                },
+                selectRadioCloudRuntime: function () {
+                    this.$.radioCloudRuntime.checked = (this.$.radioCloudRuntime.checked ? false : true);
+                },
+                
+                launchTarm: function (e, detail) {
+                    var object = {
+                        websocket_url: "/containers/" + detail.container_id + "/ws",
+                        id: Date.now(),
+                        type: "tarm",
+                        name: detail.project.name,
+                        containerId: detail.container_id
+                    };
+                    this.push("tabList", object);
+                    this.selectedTabIndex = this.tabList.length - 1;
+                    
+                    
+                },
+                changeTab: function (count) {
+                    if (typeof this.selectedTabIndex != "number" || this.tabList.length < 1){
+                        return;
+                    }
+                    
+                    var index;
+                    for(index = 0; index < this.tabList.length; index++){
+                        if(index == this.selectedTabIndex){
+                            break
+                        }
+                    }
+                    
+                    index = index + count;
+                    if(index >= this.tabList.length){
+                        index = this.tabList.length - 1;
+                    }else if(index < 0){
+                        index = 0;
+                    }
+                    
+                    this.selectedTabIndex = index;
+                },
+                scrollTab: function () {
+                    this.$.tabSelector.scrollLeft = this.$.tabSelector.selectedItem.offsetLeft;
+                },
+                prevTab: function (e) {
+                    this.changeTab(-1);
+                    this.scrollTab();
+                },
+                nextTab: function (e) {
+                    this.changeTab(1);
+                    this.scrollTab();
+                },
+                runTask: function (e, detail) {
+                    var object = {
+                        websocket_url: "/containers/" + detail.container_id + "/tasks/" + detail.task.id,
+                        id: Date.now(),
+                        type: "task",
+                        name: detail.task.cmd,
+                        containerId: detail.container_id
+                    };
+                    this.push("tabList", object);
+                    this.selectedTabIndex = this.tabList.indexOf(object);
+                },
+                deleteTab: function (e) {
+                    e.stopPropagation();
+                    if(this.tabList.length < 1){
+                        this.selectedTabIndex = null;
+                    } else if(this.tabList.length - 1 <= e.model.index){
+                        this.selectedTabIndex = this.tabList.length - 2;
+                    } else if(this.selectedTabIndex != 0 && this.selectedTabIndex < this.tabList.length + 1){
+                        this.selectedTabIndex--;
+                    }
+                    this.splice("tabList", e.model.index, 1);
+                },
+                deleteTabs: function (e, detail) {
+                    e.stopPropagation();
+                    var self = this;
+                    var length = this.tabList.length - 1;
+                    for(i = length; i >= 0; i--) {
+                        if(detail.container_id == this.tabList[i].containerId) {
+                            self.splice("tabList", i, 1);
+                        }
+                    }
+                },
+                showTab: function (e) {
+                    this.isHiddenTab = false;
+                },
+                hiddenTab: function (e) {
+                    this.isHiddenTab = true;
+                },
+                _eq: function (a, b) {
+                    return a == b;
+                },
+            });
+
+        }());
+    </script>
+</dom-module>

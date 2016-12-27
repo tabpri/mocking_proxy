@@ -1,0 +1,19 @@
+{
+  "name": "our_curls",
+  "version": "1.0.0",
+  "description": "in environmental vars of your default ( such as .bash_profile or .zsh, fish's config ) ``` vi ~.bash_profile set $kernel_host set curl_host = $kernel_host ```",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/toukubo/our_curl.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/toukubo/our_curl/issues"
+  },
+  "homepage": "https://github.com/toukubo/our_curl#readme"
+}

@@ -1,0 +1,132 @@
+<link rel="import"  href="/static/bower_components/polymer/polymer.html">
+<link rel="import"  href="i18n.html">
+
+<script>
+(function(){
+
+    var _cache = {};
+
+    function mixinDeep() {
+        function mixin(base, val) {
+            if (val && val.constructor == Object) {
+                if (!base || base.constructor != Object) {
+                    base = {};
+                }
+                for (var k in val) {
+                    var v = val[k];
+                    if (v !== undefined) {
+                        base[k] = mixin(base[k], v);
+                    }
+                }
+            }
+            else if (val instanceof Array) {
+                base = JSON.parse(JSON.stringify(val));
+            }
+            else if (val !== undefined) {
+                base = val;
+            }
+            return base;
+        }
+        return [].slice.call(arguments).reduce(mixin);
+    }
+
+    function getResourceObj(url, locale) {
+        url = url.replace(/%7Blocale%7D/g, '{locale}').replace(/\{locale\}/g, locale);
+        var p = _cache[url];
+        if (!p) {
+            p = _cache[url] = fetch(url).then(function(res) {
+                if (res.status >= 200 && res.status < 300) {
+                    return res.json();
+                }
+                else {
+                    throw Error(res.status + ' ' + res.statusText);
+                }
+            });
+        }
+        return p;
+    }
+
+    Polymer({
+        is: 'i18n-data',
+
+        properties: {
+            value: {
+                type: Object,
+                notify: true,
+                readOnly: true,
+                value: null
+            },
+            _locales: {
+                type: Array,
+                value: function() {return I18n.languages}
+            },
+            resourceUrl: {
+                type: String,
+                value: ''
+            },
+            _resourceUrl: {
+                type: String,
+                value: function() {return I18n.resourceUrl}
+            }
+        },
+
+        observers: [
+            '_updateValue(resourceUrl, _resourceUrl, _locales, _domOk)'
+        ],
+
+        attached: function() {
+            this._handle = this.async(function() {
+                this._domOk = true;
+            }, 1);
+            this.listen(window, 'languages-changed', '_languageChanged');
+            this.listen(window, 'resource-url-changed', '_resourceUrlChanged');
+        },
+
+        detached: function() {
+            this.unlisten(window, 'languages-changed', '_languageChanged');
+            this.unlisten(window, 'resource-url-changed', '_resourceUrlChanged');
+            this.cancelAsync(this._handle);
+            this._domOk = false;
+        },
+
+        _languageChanged: function(e) {
+            this._locales = e.detail.value;
+        },
+
+        _resourceUrlChanged: function(e) {
+            this._resourceUrl = e.detail.value;
+        },
+
+        _updateValue: function(url, superUrl, locales, domOk) {
+            url = url || superUrl;
+            if (!url || !locales || !domOk) {
+                this._setValue(null);
+                return;
+            }
+
+            var me = this;
+            url = this.domHost.resolveUrl(url);
+
+            var ps = locales.map(function(locale) {
+                return getResourceObj(url, locale).catch(function() {
+                });
+            });
+
+            Promise.all(ps).then(function(data) {
+                var res = mixinDeep.apply(null, [{}].concat(data.reverse()));
+                me._setValue(res || null);
+            });
+        }
+    });
+
+    function prop(obj, path) {
+        if (path) {
+            path.split('.').forEach(function(key) {
+                obj = obj && obj[key];
+            });
+        }
+        return obj;
+    }
+
+}());
+</script>

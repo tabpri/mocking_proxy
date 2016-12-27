@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .a9d52883-ef73-4ee6-8bac-c3dcd6b73a3f {
+        fill: none;
+      }
+
+      .cece4861-8f67-4532-b0d2-dbd4d36f3e28 {
+        fill: #fff;
+      }
+
+      .eb4d02b8-9c73-4715-afb0-85502d4c11f5 {
+        fill: #d9d9d9;
+      }
+    </style>
+  </defs>
+  <title>icn-global_check-off</title>
+  <g id="92f615e3-0728-43b2-bf4c-b2d65ae24ffe" data-name="レイヤー 2">
+    <g id="591f1003-449b-4884-80d5-264882605500" data-name="レイヤー 1">
+      <g id="5269948e-a56c-4d4d-8c02-0b72bce96ee6" data-name="グローバルアイコン">
+        <g id="aa2c8914-6397-40b3-99e1-94a011f79305" data-name="icn-global_check-off">
+          <rect class="a9d52883-ef73-4ee6-8bac-c3dcd6b73a3f" width="300" height="300"/>
+          <g>
+            <rect class="cece4861-8f67-4532-b0d2-dbd4d36f3e28" x="20" y="19" width="261" height="260"/>
+            <path class="eb4d02b8-9c73-4715-afb0-85502d4c11f5" d="M271,29V269H30V29H271M291,9H10V289H291V9Z"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

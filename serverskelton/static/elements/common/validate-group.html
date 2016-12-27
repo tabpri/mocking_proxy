@@ -1,0 +1,46 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-multi-selectable.html">
+
+<script>
+    Polymer({
+        is: 'validate-group',
+        properties: {
+            invalid: {
+                type: Boolean,
+                value: false,
+                notify: true
+            }
+        },
+
+        ready: function () {
+            var boundHandler = this._childNodesChanged.bind(this);
+            this._observer = Polymer.dom(this).observeNodes(boundHandler);
+        },
+
+        _childNodesChanged: function (info) {
+            var addedElements = info.addedNodes.filter(function (node) {
+                return (node.nodeType === Node.ELEMENT_NODE)
+            });
+
+            var removedElements = info.removedNodes.filter(function (node) {
+                return (node.nodeType === Node.ELEMENT_NODE)
+            });
+
+            var me = this;
+
+            addedElements.forEach(function(node) {
+                me.listen(node, 'invalid-changed', '_check');
+            });
+
+            removedElements.forEach(function(node) {
+                me.unlisten(node, 'invalid-changed', '_check');
+            });
+        },
+
+        _check: function(e) {
+            this.invalid = Polymer.dom(this).children.some(function(node) {
+                return !!node.invalid;
+            })
+        }
+    });
+</script>

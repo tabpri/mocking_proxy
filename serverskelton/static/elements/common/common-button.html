@@ -1,0 +1,134 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+<dom-module id="common-button">
+<template>
+    <style include="base-styles"></style>
+    <style>
+        :host {
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            box-sizing: border-box;
+        }
+        
+        :host([size="A"]) {
+            font-size: 12px;
+            height: 24px;
+            padding: 0 10px;
+        }
+
+        .label[size="A"] {
+            line-height: 24px;
+        }
+        
+        .label[size="B"] {
+            line-height: 30px;
+        }
+
+        :host([size="B"]) {
+            font-size: 14px;
+            height: 30px;
+            padding: 0 20px;
+        }
+
+        :host([type="project"]) {
+            background-color: var(--code-color-project-add-button);
+            color: var(--code-color-font-white);
+        }
+        
+        :host([type="add"]) {
+            background-color: var(--code-color-button-add);
+            color: var(--code-color-font-white);
+        }
+        
+        :host([type="accept"]) {
+            background-color: var(--code-color-button-accept);
+            color: var(--code-color-font-white);
+        }
+        
+        :host([type="cancel"]) {
+            background-color: var(--code-color-button-cancel);
+            color: var(--code-color-font-white);
+        }
+        
+        :host([type="common"]) {
+            background-color: var(--code-color-button-common);
+            color: var(--code-color-font-black);
+        }
+        
+        :host([type="close"]) {
+            background-color: var(--code-color-button-close);
+            color: var(--code-color-font-white);
+        }
+        
+        :host([type="delete"]) {
+            background-color: var(--code-color-button-delete);
+            color: var(--code-color-font-white);
+        }
+        
+        :host([disabled]) {
+            cursor: default;
+            pointer-events: none;
+            background-color: #e0e0e0;
+            color: #b3b3b3;
+        }
+        
+        .container {
+            @apply(--layout-horizontal);
+            @apply(--layout-center-center);
+            height: 100%;
+        }
+
+        .icon {
+            @apply(--layout-flex-none);
+            margin-right: 5px;
+        }
+        
+        .icon[blank] {
+            display: none;
+        }
+
+        .label {
+            overflow: hidden;
+        }
+    </style>
+    
+    <div class="container cursor-pointer">
+        <ajax-img class="icon icon-s" nesting src="{{icon}}"></ajax-img>
+        <div class="label" size$={{size}}>
+            <content></content>
+        </div>
+    </div>
+</template>
+
+<script>
+(function(){
+
+    Polymer({
+        is: 'common-button',
+
+        properties: {
+            size: {
+                type: String,
+                reflectToAttribute: true,
+                value: 'A'
+            },
+            type: {
+                type: String,
+                reflectToAttribute: true,
+                value: 'common'
+            },
+            icon: {
+                type: String,
+                value: ''
+            },
+        }
+    });
+
+}());
+</script>
+</dom-module>

@@ -1,0 +1,583 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/common/working-dialog.html">
+<link rel="import" href="/static/elements/common/message-dialog.html">
+<link rel="import" href="/static/elements/commit-image-dialog.html">
+<link rel="import" href="/static/elements/edit-project-dialog.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/validate-group.html">
+<link rel="import" href="/static/elements/common/validate-strings.html">
+<link rel="import" href="/static/elements/common/drop-down.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="project-tree">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            :host {
+                @apply(--layout-horizontal);
+                @apply(--layout-flex);
+                border-right: 1px solid var(--code-color-border);
+
+                width: 200px;
+                flex-direction:column;
+                align-content: stretch;
+
+                position: relative;
+                background-color: var(--code-color-list-base);
+                height: 100%;
+                color: var(--code-color-font-gray);
+            }
+            .project-tree-iron-selector{
+                /*overflow: scroll;*/
+            }
+            .projectMenu {
+                margin-left: 10px;
+                /*visibility: hidden;*/
+            }
+            .projectMenu .dropdown-trigger {
+                width: 16px;
+                height: 16px;
+            }
+
+
+            .listItemBase {
+                height: 30px;
+                background-color: var(--code-color-list-base);
+                color: var(--code-color-font-gray);
+                padding: 0px 10px 0px 10px;
+
+            }
+            
+            .listItemBase.iron-selected {
+                background-color: var(--code-color-active);
+                color: var(--code-color-list-base);
+            }
+            
+            .listItem {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+
+            .listItem label{
+                @apply(--layout-flex);
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            
+            .listItem label flex-label {
+                margin-left: 5px;
+            }
+
+            .dialog-field {
+                margin: 5px 0px;
+            }
+            
+            [hide] {
+                visibility: hidden;
+            }
+
+            drop-down .dropdown-content{
+                color: var(--code-color-font-gray);
+                background-color: white;
+                padding: 10px;
+            }
+            
+            drop-down .dropdown-content div {
+                margin-bottom: 15px;
+            }
+            
+            drop-down .dropdown-content div:last-child{
+                margin-bottom: 0px;
+            }
+
+            .name {
+                height: 24px;
+                padding-left: 5px;
+                padding-right: 5px;
+                border: 1px solid var(--code-color-border);
+            }
+
+            .project-name {
+                height: 30px;
+                width: 100%;
+                margin-left: 13px;
+                line-height: 30px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .menuPanel {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+
+            .projectMenu {
+                margin-left: 10px;
+                margin-right: 10px;
+            }
+            
+            .projectMenu .dropdown-trigger {
+                width: 16px;
+                height: 16px;
+            }
+            
+            .projectMenu .dropdown-content {
+                padding: 10px;
+            }
+            
+            .projectMenu .dropdown-content div {
+                margin-bottom: 15px;
+            }
+            
+            .projectMenu .dropdown-content div:last-child {
+                margin-bottom: 0px;
+            }
+
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <delete-dialog id="deleteDialog"></delete-dialog>
+        <message-dialog id="messageDialog" mode="[[_messageDialogType]]">[[_messageDialogText]]</message-dialog>
+        <working-dialog id="workingDialog">[[_workingDialogMessage]]</working-dialog>
+        <edit-project-dialog id="editProjectDialog"></edit-project-dialog>
+        <commit-image-dialog id="commitImageDialog"></commit-image-dialog>
+        
+        <button-dialog modal id="createDialog">
+            <div class="dialog-title">[[_titleItemDialog]]</div>
+            <div class="dialog-body">
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.name}}</div>
+                    <div class="dialog-field">
+                        <input type="text" class="name" value="{{createItemName::input}}" invalid="[[invalid]]">
+                    </div>
+                    <validate-group class="inputError" invalid="{{invalid}}">
+                        <validate-strings value="{{_makeSelectItemFullPath(createItemName)}}" strings="{{_validateStrings}}" input-value="{{createItemName}}"></validate-strings>
+                    </validate-group>
+                </div>
+            </div>
+            <div class="buttonArea">
+                <common-button size="B" type="cancel" on-tap="_closeCreateItemDaialog">{{resource.cancel}}</common-button>
+                <common-button size="B" type="accept" on-tap="_createOrRenameItem" disabled$={{!checkAnd(createItemName,invalid)}}>{{resource.ok}}</common-button>
+            </div>
+        </button-dialog>
+        
+        <div class="menuPanel">
+            <div class="project-name">{{project.name}}</div>
+            <drop-down class="projectMenu" vertical-align="top" horizontal-align="left" hidden$="{{!_showProjectMenu(project.id)}}">
+                
+                <ajax-img class="icon-s dropdown-trigger cursor-pointer" src="/static/img/icn-global_option.svg"></ajax-img>
+                <div class="dropdown-content cursor-pointer">
+                    <div on-tap="_createFileAtRoot">{{resource.add_file}}</div>
+                    <div on-tap="_createDirectoryAtRoot">{{resource.add_directory}}</div>
+                    <div on-tap="_editProject">{{resource.edit_project}}</div>
+                    <div on-tap="_showCommitImageDialog">{{resource.commit_image}}</div>
+                    <div on-tap="showDeleteDialogAtRoot">{{resource.delete}}</div>
+                </div>
+            </drop-down>
+        </div>
+        <iron-selector class="project-tree-iron-selector" attr-for-selected="value" selected="{{selectItemId}}" >
+            <template id="hoge" is="dom-repeat" items="{{tree}}" filter="filterTree" sort="sortTree" observe="opened">
+                <div class="listItemBase" value="[[item.id]]" on-tap="_treeTap">
+                    <div class="listItem cursor-pointer" style="margin-left:{{item.indent}}0px;">
+                        <label>
+                            <input type="checkbox" checked="{{item.opened::change}}" hidden>
+                            <div hide$="[[!item.isDir]]">
+                                <ajax-img class="icon-s" src="/static/img/icn-arrow4_down.svg" hidden$="[[!item.opened]]"></ajax-img>
+                                <ajax-img class="icon-s" src="/static/img/icn-arrow4_next.svg" hidden$="[[item.opened]]"></ajax-img>
+                            </div>
+                            <flex-label>{{item.name}}</flex-label>
+                        </label>
+                        <drop-down vertical-align="bottom" horizontal-align="left" on-tap="_stopPropagation">
+                            <ajax-img class="icon-s dropdown-trigger" src="/static/img/icn-global_option.svg" on-tap="_closeDropDown"></ajax-img>
+                            <div class="dropdown-content">
+                                <div on-tap="_createFile" hidden="[[!item.isDir]]">{{resource.add_file}}</div>
+                                <div on-tap="_createDirectory" hidden="[[!item.isDir]]">{{resource.add_directory}}</div>
+                                <div on-tap="_renameItem">{{resource.rename}}</div>
+                                <div on-tap="_showDeleteDialog">{{resource.delete}}</div>
+                            </div>
+                        </drop-down>
+                    </div>
+                </div>
+            </template>
+        </iron-selector>
+
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                is: "project-tree",
+                properties: {
+                    tree: Object,
+                    item: {
+                        type: Object,
+                        notify: true,
+                    },
+                    selectItem: {
+                        type: Object,
+                        notify: true,
+                        value: function () {return {hasUndo: false, hasRedo: false}}
+                    },
+                    selectItemId: {
+                        type: String,
+                        value: '',
+                        notify: true,
+                    },_isRename: {
+                        type: Boolean
+                    }
+                },
+                observers: [
+                    'selectItemChange(selectItem)',
+                    'selectItemIdChange(selectItemId)',
+                ],
+                attached: function() {
+                    this.listen(window, 'delete-project', 'showDeleteDialogAtRoot');
+                },
+                detached: function() {
+                    this.unlisten(window, 'delete-project', 'showDeleteDialogAtRoot');
+                },
+                _showItemDaialogEvent: function() {
+                    if (this.project.container_id) {
+                        this._containerId = this.project.container_id;
+                        this._titleItemDialog = this._isRename ? "Edit" : "Add";
+                        this._titleItemDialog = this._titleItemDialog + ( this._isDir ? " Directory" : " File");
+                        this._validateStrings = this.tree.map(function (item) { return item.path; });
+                        this.$.createDialog.open();
+                    }
+                },
+                _closeCreateItemDaialog: function() {
+                    this.$.createDialog.close();
+                },
+                _makeSelectItemFullPath: function(item){
+//                    return this._path + "/" + item;
+                    if(this._isRename){
+                        basePath = this._getBasePath(this._path)
+                        return basePath + "/" + item
+                    }
+
+                    if(this._path == '/') {
+                        return "/" + item
+                    }
+                    return this._path + "/" + item;
+                },
+
+                selectItemIdChange: function (selectItemId) {
+                    if (!this.tree) {
+                        return;
+                    }
+                    for(var i=0; i<this.tree.length;i++){
+                        if (this.tree[i].id == selectItemId) {
+                            this.selectItem = this.tree[i];
+                            this.setTreeOpend(this.tree[i], this.tree, true);
+                            return;
+                        }
+                    }
+                },
+                getProject: function(projectId){
+                    location.href="/projects/"+projectId
+                },
+                setTreeOpend: function (target, tree, value) {
+                    var self = this;
+                    var path = target.path.replace(/[/][^/]*$/, '');
+                    var parents = [];
+                    while(path.length > 0){
+                        parents.push(path);
+                        path = path.replace(/[/][^/]*$/, '');
+                    }
+
+                    for(i = 0; i < tree.length; i++){
+                        for(j = 0; j < parents.length; j++){
+                            if(tree[i].path == parents[j]){
+                                self.set(["tree", i, "opened"], value);
+                            }
+                        }
+                    }
+                },
+                checkAnd: function() {
+                    for (i = 0; i < arguments.length; i++) {
+                        if (typeof arguments[i] == 'boolean') {
+                            if (arguments[i] == true) {
+                                return false;
+                            }
+                        } else if (!arguments[i]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                _renameDirectory: function(e){
+                    this._isDir = true;
+                    this._renameDirectory(e);
+                },
+                _renameItem: function(e) {
+                    this._renameFile(e)
+                },
+                _getBasePath: function (path) {
+
+                    nodes = path.split('/')
+                    length = nodes.length
+                    itemName = nodes[length-1]
+                    basepath = nodes.slice(0,length-1).join("/")
+                    console.log("mark _getBasePath")
+
+
+                    console.log("mark basepath")
+                    console.log(basepath)
+
+
+                    return basepath;
+                },
+
+                _getItemName: function (path) {
+
+                    nodes = path.split('/')
+                    length = nodes.length
+                    itemName = nodes[length-1]
+                    console.log("mark itemName")
+                    console.log(itemName)
+
+
+                    return itemName;
+                },
+                _renameFile: function(e){
+                    this._path = e.model.item.path || ""
+                    this._isDir = false
+                    this._isRename = true
+                    this.createItemName = this._getItemName(this._path)
+                    //どうすればitem（フォルダなりFileなり）の名称が取得できるか。現在の？
+                    this._showItemDaialogEvent()
+                },
+                _renameItemService: function (e) {
+                    var oldFilename = this._getItemName(this._path)
+                    var basepath = this._getBasePath(this._path)
+                    var path = basepath + "/" + oldFilename
+                    var newName =  this.createItemName
+
+
+                    console.log("mark oldFilename")
+                    console.log(oldFilename)
+
+                    console.log("mark path")
+                    console.log(path)
+
+
+                    console.log("mark basepath")
+                    console.log(basepath)
+
+                    console.log("mark newPath")
+                    console.log(newName)
+
+
+                    codeApi.patch("/containers/:container_id/newName/:newName/path/:path", {
+                        params: {
+                            container_id: this._containerId,
+//                            newPath: newPath.substr(1),
+                            path: path.substr(1),
+                            newName: newName
+                        }
+                    }).then(function () {
+//                        var index = self.tree.indexOf(e.model.item);
+                        this.fire('openProject');
+                        console.log("mark index")
+                        console.log(index)
+
+                        this.$.createDialog.close();
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                        this.$.createDialog.close();
+                    }.bind(this));
+
+                },
+                _showDeleteDialog: function (e) {
+                    var self = this;
+                    this._selectedMenuItem = undefined;
+                    this.$.deleteDialog.show(
+                        function () {
+                            codeApi.delete("/containers/:container_id/path/:path", {
+                                params: {
+                                    container_id: self.project.container_id,
+                                    path: e.model.item.path.split("/").slice(1).join("/"),
+                                },
+                                responseType: 'text'
+                            }).then(function () {
+                                var index = self.tree.indexOf(e.model.item);
+                                this.fire('openProject');
+                                self.$.deleteDialog.close();
+                            }.bind(this)).catch(function (e) {
+                                console.log(e);
+                                self.$.deleteDialog.close();
+                            }.bind(this));
+                        },
+                        function () {                        // Cancel
+                            self.$.deleteDialog.close();
+                        }
+                    );
+                },
+                _createOrRenameItem: function(e) {
+                    if(this._isRename){
+                        this._renameItemService(e)
+                    }else{
+                        this._createItem(e)
+                    }
+                },
+                _createDirectory: function (e) {
+                    this._path = e.model.item.path || "";
+                    this._isRename = false;
+                    this._isDir = true;
+                    this._filename = null;
+                    this._showItemDaialogEvent();
+                },
+                _createFile: function (e) {
+                    this._path = e.model.item.path || "";
+                    this._isDir = false;
+                    this._isRename = false;
+
+                    this._filename = null;
+                    this._showItemDaialogEvent();
+                },
+                _createItem: function (e) {
+                    console.log("createItemCalled")
+                    var createpath = this._path + "/" + this.createItemName;
+                    codeApi.post("/containers/:container_id/path/:path", {
+                        params: {
+                            container_id: this._containerId,
+                            path: createpath.substr(1)
+                        },
+                        body: {
+                            "base64": "",
+                            "is_file": !this._isDir,
+                        },
+                        responseType: 'text'
+                    }).then(function (data) {
+                        console.log("mark 1")
+
+                        this.push("tree", {
+                            name: this.createItemName,
+                            path: createpath,
+                            containerId: this._containerId,
+                            isDir: this._isDir,
+                            indent: String(createpath).replace(/[^/]/g, '').length - 1,
+                            opened: true,
+                            id:  this._containerId +':' + createpath
+                        });
+                        console.log("mark 2")
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                    }.bind(this))
+
+                    console.log("mark 3")
+
+                    this.$.createDialog.close();
+                },
+                filterTree: function(item) {
+                    var indent = item.indent - 1;
+                    for (var i = this.tree.indexOf(item); i>=0; i--) {
+                        if (item.path.match("^" + this.tree[i].path + "/")){
+                            if (this.tree[i].indent == indent) {
+                                if (!this.tree[i].opened) {
+                                    return false;
+                                }
+                                indent--;
+                            }
+                        }
+                    }
+                    return true;
+                },
+                sortTree: function(a, b) {
+                    var aDir = a.path.replace(/[^/]*$/, '');
+                    var bDir = b.path.replace(/[^/]*$/, '');
+                    if (!a.isDir && a.indent < b.indent && bDir.indexOf(aDir) == 0) {
+                        return 1;
+                    }
+                    if (!b.isDir && b.indent < a.indent && aDir.indexOf(bDir) == 0) {
+                        return -1;
+                    }
+                    if (aDir == bDir && a.isDir != b.isDir) {
+                        return a.isDir ? -1 : 1;
+                    }
+                    return a.path.toLowerCase() < b.path.toLowerCase() ? -1 : a.path.toLowerCase() > b.path.toLowerCase() ? 1 : 0;
+                },
+                selectItemChange: function (selectItem) {
+                    if (!this.selectItem) {
+                        this.selectItemId = null;
+                        return;
+                    }
+                    this.selectItemId = selectItem.id;
+                },
+                _treeTap: function(e) {
+                    if (e.model.item.isDir) {
+                        e.stopPropagation();
+                    }
+                },
+                _stopPropagation: function(e) {
+                    e.stopPropagation();
+                },
+                _closeDropDown: function(e) {
+                    this.fire('close-dropdown', {node:document.body, bubbles:false});
+                },
+                _showProjectMenu: function(projectId) {
+                    if (!projectId) {
+                        return false;
+                    }
+                    return true;
+                },
+                _createDirectoryAtRoot: function () {
+                    this._path = "/";
+                    this._isDir = true;
+                    this._isRename = false;
+                    this._showItemDaialogEvent();
+                },
+                _createFileAtRoot: function () {
+                    this._path = "/";
+                    this._isDir = false;
+                    this._isRename = false;
+                    this._showItemDaialogEvent();
+                },
+                _editProject: function (e) {
+                    var self = this;
+                    this.$.editProjectDialog.show(this.project, function (data) {
+                        self.getProject(self.project.id)
+                    });
+                },
+                showDeleteDialogAtRoot: function (e) {
+                    var self = this;
+                    self._selectedMenuItem = undefined;
+                    self.$.deleteDialog.show(
+                        function () {
+                            codeApi.delete("/projects/:project_id", {
+                                params: {
+                                    project_id: self.project.id,
+                                },
+                            }).then(function (data) {
+                                location.href="/" // should do in SPA way
+                            }).catch(function (e) {
+                                console.log(e);
+                                self.$.deleteDialog.close();
+                            }); 
+                        },
+                        function () {                        // Cancel
+                            self.$.deleteDialog.close();
+                        }
+                    );
+                },
+                _showCommitImageDialog: function () {
+                    console.log("mark this.project.container_id in _showCommitImageDialog")
+                    console.log(this.project)
+                    console.log(this.tree)
+                    console.log(this.project.container_id)
+                    console.log("mark this.project.container_id in _showCommitImageDialog end")
+                    this.$.commitImageDialog.show(this.project.container_id);
+
+                }
+            })
+        }());
+    </script>
+</dom-module>

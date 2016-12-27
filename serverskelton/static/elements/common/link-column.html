@@ -1,0 +1,54 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/pushstate-anchor/pushstate-anchor.html">
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="table-common.html">
+<link rel="import" href="column-header.html">
+
+<dom-module id="link-column">
+    <style include="table-column-style"></style>
+    <style>
+        a {
+            color: #0071bc;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        
+        .row[status~="selected"] a {
+            color: #fff;
+        }
+        
+        ajax-img {
+            margin-top: 5px;
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+
+    <template>
+        <column-header class="header" table="{{_table}}" label="{{label}}" order="{{order}}"></column-header>
+        <div id="rows" scroll-top="[[_table.scrollTop]]">
+            <template id="repeater" is="dom-repeat" items="{{_table.items}}" sort="{{_table.sort}}" filter="{{_table.filter}}">
+                <div class="row" status$="[[_status(_table.row.*, item.*)]]">
+<!--                    <div class="value">-->
+                        <a is="pushstate-anchor" href$="{{_value(item.*, path, href)}}"><ajax-img src="/static/img/icn-code_delete.svg"></ajax-img>aaa</a>
+<!--                    </div>-->
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'link-column',
+
+            behaviors: [ListTable.ColumnBehavior],
+
+            properties: {
+                href: {
+                    type: String,
+                    value: '{value}'
+                }
+            }
+        });
+    </script>
+</dom-module>

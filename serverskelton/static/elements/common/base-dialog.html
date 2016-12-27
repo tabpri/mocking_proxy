@@ -1,0 +1,142 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+
+<dom-module id="base-dialog">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            :host {
+                cursor: default;
+            }
+
+            .modal_screen {
+                position: inherit;
+                z-index: 10000;
+                height: 100%;
+                width: 100%;
+                top: 0;
+                left: 0;
+                background-color: #000;
+                opacity: 0.6;
+            }
+
+            .main {
+                position: relative;
+                z-index: 10001;
+                @apply(--layout-vertical);
+                background: var(--code-color-background-modal);
+                color: black;
+                min-height: 160px;
+                max-height: 500px;
+                width: 400px;
+            }
+            
+            .titlebar {
+                background-color: #333;
+                color: #f2f2f2;
+                width: 380px;
+                height:28px;
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+                line-height: 28px;
+                padding: 0px 10px 0px 10px;
+                font-size: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                @apply(--base-dialog-titlebar);
+            }
+            
+            .bodyArea {
+                @apply(--layout-vertical);
+                @apply(--base-dialog-body-area);
+            }
+
+            :host ::content .dialog-body {
+                padding: 10px 20px 10px 20px;
+                min-height: 132px;
+                max-height: 472px;
+                overflow: auto;
+                @apply(--base-dialog-body);
+            }
+            
+            :host ::content .dialog-fieldset {
+                margin-bottom: 10px;
+            }
+            
+            :host ::content .dialog-fieldset:last-child {
+                margin-bottom: 0px;
+            }
+            
+            :host ::content .dialog-field {
+                @apply(--layout-vertical);
+            }
+            
+            :host ::content .dialog-legend {
+                color: var(--code-color-font-whitegray);
+                margin-bottom: 5px;
+            }
+            
+            :host ::content .dialog-parameter {
+                height: 30px;
+                border-top: solid 1px var(--code-color-border);
+                border-left: solid 1px var(--code-color-border);
+                border-right: solid 1px var(--code-color-border);
+                @apply(--layout-horizontal);
+            }
+
+            :host ::content .dialog-parameter:last-child {
+                border-bottom: solid 1px var(--code-color-border);
+            }
+
+            :host ::content .dialog-parameter-legend {
+                text-align: center;
+                line-height: 30px;
+                border-right: solid 1px var(--code-color-border);
+                background-color: var(--code-color-background-modal);
+                @apply(--layout-flex);
+            }
+
+            :host ::content .dialog-parameter-field {
+                line-height: 30px;
+                background-color: var(--code-color-background-white);
+                @apply(--layout-flex-2);
+                padding: 0px 10px;
+            }
+
+        </style>
+        
+        
+        <div class="modal_screen"></div>
+    
+        <div class="main">
+            <div class="titlebar">
+                <content select=".dialog-title-left"></content>
+                <content select=".dialog-title"></content>
+                <content select=".dialog-title-right"></content>
+            </div>
+            <div class="bodyArea">
+                <content select=".dialog-body-top"></content>
+                <content select=".dialog-body"></content>
+                <content select=".dialog-body-bottom"></content>
+            </div>
+        </div>
+        
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "base-dialog",
+                behaviors: [
+                    Polymer.IronOverlayBehavior
+                ],
+            });
+
+        }());
+    </script>
+</dom-module>

@@ -1,0 +1,39 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<!--
+
+## usage and param
+path:the app-route
+scope: you can ommit. use this if you have more than two-route.
+    example: scope:code makes you
+
+-->
+    <dom-module id="app-router-controller">
+
+    <script>
+        (function () {
+            Polymer({
+                is: "app-router-controller",
+                properties: {
+                    routesid: {
+                        type: String,
+                        notify: true,
+                    },
+                    scope: {
+                        type: String,
+                        notify: true,
+                    },
+                    router: {
+                        type: Object
+                    }
+                },
+                attached: function () {
+                    this.scope === undefined ? "" : "-"+this.scope ;
+                    this.listen(document.body, 'app-router-go' , '_go');
+                },
+                _go: function(event,path){
+                    this.router.go(path);
+                }
+            });
+        }());
+    </script>
+</dom-module>

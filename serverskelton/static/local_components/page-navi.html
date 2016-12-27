@@ -1,0 +1,95 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/static/elements/common/ajax-img.html">
+
+<dom-module id="page-navi">
+
+<style>
+    :host {
+        display: inline-block;
+        font-size: 12px;
+        color: #fff;
+        line-height: 1;
+    }
+
+    .layout {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+    }
+
+    .current {
+        margin: 0 8px;
+    }
+
+    .button {
+        cursor: pointer;
+    }
+
+    .button .icon {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+
+    .button[disabled] {
+        cursor: default;
+        pointer-events: none;
+        opacity: 0.3;
+    }
+</style>
+
+<template>
+    <div class="layout">
+        <div class="button prev" on-tap="_goPrev" disabled$="{{!_hasPrev(offset)}}">
+            <ajax-img class="icon" src="/static/img/icn-arrow3_back.svg"></ajax-img>
+        </div>
+        <div class="current">{{_displayStart(offset, count)}}-{{_displayEnd(offset, limit, count)}} / {{count}}</div>
+        <div class="button next" on-tap="_goNext" disabled$="{{!_hasNext(offset, limit, count)}}">
+            <ajax-img class="icon" src="/static/img/icn-arrow3_next.svg"></ajax-img>
+        </div>
+    </div>
+</template>
+
+<script>
+(function(){
+
+    Polymer({
+        is: 'page-navi',
+
+        properties: {
+            offset: {
+                type: Number,
+                notify: true,
+            },
+            limit: Number,
+            count: Number
+        },
+
+        _hasPrev: function(offset) {
+            return offset > 0;
+        },
+
+        _hasNext: function(offset, limit, count) {
+            return offset + limit < count;
+        },
+
+        _goPrev: function() {
+            this.offset -= this.limit;
+        },
+
+        _goNext: function() {
+            this.offset += this.limit;
+        },
+
+        _displayStart: function(offset, count) {
+            return Math.min(offset + 1, count);
+        },
+
+        _displayEnd: function(offset, limit, count) {
+            return Math.min(offset + limit, count);
+        }
+    });
+
+}());
+</script>
+</dom-module>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .e8031540-06e0-4ca6-9cd1-e1d1fb7c463a {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>icn-global_plus</title>
+  <g id="5efff2c6-f3cd-476c-b5b2-c830c663278c" data-name="レイヤー 2">
+    <g id="f15d599d-e77f-4b42-aaba-cdb4a03fd7d9" data-name="レイヤー 1">
+      <g id="94b962a0-c816-4c6f-b50d-67d9f93b2a2e" data-name="icn-global_plus">
+        <path d="M274.75,127.5H173.5v-103c0-13.31-10.19-14.45-23.5-14.45s-23.5,1.15-23.5,14.45v103H24.23c-13.31,0-14.45,10.19-14.45,23.5s1.15,23.5,14.45,23.5H126.5V275c0,13.31,10.19,14.45,23.5,14.45s23.5-1.15,23.5-14.45V174.5H274.75c13.31,0,14.45-10.19,14.45-23.5S288.06,127.5,274.75,127.5Z"/>
+        <rect class="e8031540-06e0-4ca6-9cd1-e1d1fb7c463a" width="300" height="300"/>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .\38 93e7f7f-e22a-449c-8ec8-3dd0e4046591 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>icn-global_bar-ctrl</title>
+  <g id="ef76c9c3-96d6-477e-987b-e326f0bce679" data-name="レイヤー 2">
+    <g id="1d565253-1178-4fe9-a6a7-5a5a00ab4db0" data-name="レイヤー 1">
+      <g id="1189202c-6049-4d2b-b4a0-f8fccd0d3012" data-name="グローバルアイコン">
+        <g id="db0939b6-d5fa-46d2-b0c8-2054abadf92d" data-name="icn-global_bar-ctrl">
+          <g id="ec39bde4-6220-480a-a3d1-6054546b400f" data-name="icn-global_bar-ctrl">
+            <path d="M149.5,9,256,108.23V259a29.8,29.8,0,0,1-29.67,30H73a30.09,30.09,0,0,1-30-30V108.23Z"/>
+          </g>
+          <rect class="893e7f7f-e22a-449c-8ec8-3dd0e4046591" width="300" height="300" transform="translate(300 300) rotate(180)"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

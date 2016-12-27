@@ -1,0 +1,58 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/pushstate-anchor/pushstate-anchor.html">
+<link rel="import" href="/static/elements/common/ajax-img.html">
+
+<link rel="import" href="table-common.html">
+<link rel="import" href="column-header.html">
+
+<dom-module id="event-column">
+    <style include="table-column-style"></style>
+    <style>
+        a {
+            color: #0071bc;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .row[status~="selected"] a {
+            color: #fff;
+        }
+
+        ajax-img {
+            margin-top: 5px;
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+
+    <template>
+        <column-header class="header" table="{{_table}}" label="{{label}}" order="{{order}}"></column-header>
+        <div id="rows" scroll-top="[[_table.scrollTop]]">
+            <template id="repeater" is="dom-repeat" items="{{_table.items}}" sort="{{_table.sort}}" filter="{{_table.filter}}">
+                <div class="row" status$="[[_status(_table.row.*, item.*)]]">
+                    <!--                    <div class="value">-->
+                    <div on-tap="deleteProject"><ajax-img src="/static/app/img/icn-global_link.svg"></ajax-img></div>
+                    <!--                    </div>-->
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'event-column',
+
+            behaviors: [ListTable.ColumnBehavior],
+
+            properties: {
+                event: {
+                    type: String,
+                    value: '{value}'
+                }
+            },
+            deleteProject: function(){
+
+            }
+        });
+    </script>
+</dom-module>

@@ -1,0 +1,65 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<dom-module id="common-access-behavior">
+</dom-module>
+
+<script>
+(function() {
+
+    var CommonAccessBehavior = {
+
+        getData: function(me, api_path, callbackAccept, parameters) {
+            me.loading++;
+            var apiParams = {};
+            if (parameters) {
+                apiParams = parameters;
+            }
+            api.get(api_path, apiParams).then(function (res) {
+//            api.getAll(':api_path', {
+                if (typeof callbackAccept == "function"){
+                    callbackAccept(res);
+                }
+                if (me.loading >= 1) {
+                    me.loading--;
+                }
+            }).catch(function (res) {
+                me.loading = 0;
+//                me.notfound = true;
+            });
+        },
+        checkLoading: function(count) {
+            return Boolean(count);  // if me.Loading >= 1  ---> true
+        },
+        mappingState: function(me, datas){
+            if (Array.isArray(datas)) {
+                datas.forEach(function (data) {
+                    data.state = me._checkState(data.is_enabled, data.is_released, data.is_cataloged);
+                });
+            } else {
+                datas.state = me._checkState(datas.is_enabled, datas.is_released, datas.is_cataloged);
+            }
+        },
+        _checkState: function(is_enabled, is_released, is_cataloged) {
+            var state = "None";
+            if (is_enabled) {
+                if (is_released) {
+                    if (is_cataloged) {
+                        state = "Cataloged"
+                    } else {
+                        state = "Released"
+                    }
+                } else {
+                    state = "Enabled"
+                }
+            }
+            return state;
+        },
+    };
+
+    window.CommonBehavior = {
+        CommonAccessBehavior: CommonAccessBehavior,
+    };
+
+}());
+
+</script>

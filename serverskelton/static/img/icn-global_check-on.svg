@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .\39 05f69e0-d169-4615-9281-b94fd7b9d1f9 {
+        fill: #fff;
+      }
+
+      .\37 ff599dc-2ece-44f1-b6b8-2ed5454913ea {
+        fill: #d9d9d9;
+      }
+
+      .\33 b4852d2-dd69-4ce5-817c-f5c3d1c0d008 {
+        fill: none;
+      }
+
+      .\33 c449fc6-3b4a-405e-aacb-b57c2a0f6194 {
+        fill: #0e59a5;
+      }
+    </style>
+  </defs>
+  <title>icn-global_check-on</title>
+  <g id="02426678-edd6-4f64-bafd-bc9b74103191" data-name="レイヤー 2">
+    <g id="1eb3a3d9-efa0-4872-9623-4a8f8d16f9fe" data-name="レイヤー 1">
+      <g id="06179ee6-44cf-46e9-a205-e7787ee7e66e" data-name="グローバルアイコン">
+        <g id="ddd5a44c-d546-48d4-9556-8f16a09f2071" data-name="icn-global_check-on">
+          <g>
+            <rect class="905f69e0-d169-4615-9281-b94fd7b9d1f9" x="20" y="19" width="261" height="260"/>
+            <path class="7ff599dc-2ece-44f1-b6b8-2ed5454913ea" d="M271,29V269H30V29H271M291,9H10V289H291V9Z"/>
+          </g>
+          <rect class="3b4852d2-dd69-4ce5-817c-f5c3d1c0d008" width="300" height="300"/>
+          <path class="3c449fc6-3b4a-405e-aacb-b57c2a0f6194" d="M133.87,236l-.63-.63L32.07,152.57l33.1-40.42,65.26,53.44L232.07,64,269,100.9Z"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

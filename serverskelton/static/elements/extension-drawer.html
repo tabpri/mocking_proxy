@@ -1,0 +1,299 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/drawer-panel.html">
+<link rel="import" href="/static/elements/common/panel-box.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+<dom-module id="extension-drawer">
+    <style include="base-styles"></style>
+    <style>
+        :host {
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 500px;
+        }
+
+        img {
+            display: inline;
+        }
+
+
+        .sub_panel {
+            --panel-box-body-style: {
+                padding-left: 0px;
+                padding-right: 0px;
+            }
+        }
+
+        .space {
+            height: 10px;
+        }
+
+        .scroll-vertical {
+            margin-top: -10px;
+            height: 220px;
+            overflow-y: auto;
+        }
+
+        .panel-box-field flex-label {
+            --flex-label-child: {
+                line-height: 12px;
+                height: 12px;
+            }
+        }
+
+        .listItem {
+            padding-left: 10px;
+            @apply(--layout-horizontal);
+        }
+
+        .listItem label {
+            @apply(--layout-flex);
+            @apply(--layout-horizontal);
+            height: 100%;
+        }
+
+        .listItem.iron-selected {
+            background-color: var(--code-color-active);
+            color: var(--code-color-font-white);
+        }
+
+        .menu_bar {
+            @apply(--layout-horizontal);
+            width: 100%;
+        }
+
+        .menu_bar common-button {
+            margin-left: auto;
+            margin-right: 20px;
+            margin-top: 10px;
+        }
+
+        .d_header_title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .d_header_right ajax-img {
+            margin-top: 3px;
+        }
+
+        .p_body {
+            @apply(--layout-vertical);
+        }
+/*
+
+        .p_body > .caption {
+            width: 100%;
+            color: #999999;
+        }
+
+        .p_body .data {
+            margin-bottom: 5px;
+            width: 100%;
+        }
+
+        .p_body .data:last-child {
+            margin-bottom: 0px;
+        }
+
+        .p_body .oneline {
+            height: 30px;
+        }
+
+        .p_body .multiline {
+            height: 50px;
+            overflow-y: auto;
+        }
+*/
+
+        .p_body .sub_desc {
+            padding-left: 10px;
+            padding-right: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .description {
+            height: 24px;
+        }
+
+        .dialog-field {
+            margin: 5px 0px;
+        }
+
+    </style>
+
+
+    <template>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <button-dialog modal id="createExtension">
+            <div class="dialog-title">Add Extension</div>
+            <div class="dialog-body">
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">name</div>
+                    <div class="dialog-field">
+                        <input type="text" class="name" value="{{newExtensionName::input}}">
+                    </div>
+                </div>
+
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">description</div>
+                    <div class="dialog-field">
+                        <textarea rows="7" value="{{newExtensionDesc::input}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="buttonArea">
+                <common-button size="B" type="cancel" on-tap="createExtensionCancel">Cancel</common-button>
+                <common-button size="B" type="accept" on-tap="createExtension" disabled$={{!_checkAnd(newExtensionName,newExtensionDesc)}}>OK</common-button>
+            </div>
+        </button-dialog>
+
+
+        <drawer-panel nofooter>
+            <div class="d_header_title">{{selectedApp.name}}</div>
+            <div class="d_header_right">
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-global_close.svg"  on-tap="_close"></ajax-img>
+            </div>
+
+            <div class="d_body">
+
+                <panel-box class="main_panel">
+                    <div class="p_title">Information</div>
+                    <div class="p_body">
+                        <div class="panel-box-fieldset">
+                            <div class="panel-box-legend">Name</div>
+                            <div class="panel-box-field oneline"><flex-label>{{selectedApp.name}}</flex-label></div>
+                        </div>
+                        <div class="panel-box-fieldset">
+                            <div class="panel-box-legend">Description</div>
+                            <div class="panel-box-field multiline">{{selectedApp.description}}</div>
+                        </div>
+                        <div class="panel-box-fieldset">
+                            <div class="panel-box-legend">URL</div>
+                            <div class="panel-box-field multiline">{{selectedApp.url}}</div>
+                        </div>
+
+
+
+                    </div>
+                </panel-box>
+
+                <div class="space"></div>
+
+                <panel-box class="main_panel">
+                    <div class="p_title">Select extension</div>
+                    <div class="p_body">
+
+                        <panel-box class="sub_panel">
+                            <div class="p_title">Name</div>
+                            <div class="p_body">
+                                <div class="scroll-vertical">
+                                    <iron-selector attr-for-selected="value" selected="{{selectedExtension}}">
+                                        <template is="dom-repeat" items="{{extensions}}" sort="sortTasks">
+                                            <div class="listItem" value="{{item}}">
+                                                <label><flex-label>{{item.name}}</flex-label></label>
+                                            </div>
+                                        </template>
+                                    </iron-selector>
+                                </div>
+                                <div class="menu_bar">
+                                    <common-button size="A" type="add" on-tap="onTapCreateExtension">Add</common-button>
+                                </div>
+                            </div>
+                        </panel-box>
+
+                        <div class="space"></div>
+
+                        <panel-box class="sub_panel">
+                            <div class="p_title">Description</div>
+                            <div class="p_body">
+                                <div class="description sub_desc">{{selectedExtension.description}}</div>
+                                <div class="menu_bar">
+                                    <common-button size="A" type="accept" on-tap="onTapUploadExtension" disabled$="{{!selectedExtension}}">Upload</common-button>
+                                </div>
+                            </div>
+                        </panel-box>
+                    </div>
+                </panel-box>
+            </div>
+        </drawer-panel>
+    </template>
+
+    <script>
+        (function() {
+
+            Polymer({
+                is: 'extension-drawer',
+                properties: {
+                    selectedApp: {
+                        type: Object,
+                        notify: true,
+                    },
+                    extensions: {
+                        type: Array,
+                        notify: true,
+                    },
+                    selectedExtension: {
+                        type: Object,
+                        value: null,
+                        notify: true,
+                    },
+                },
+                _close: function () {
+                    this.fire('extension-drawer', {request: 'close'});
+                },
+                sortTasks: function(a,b) {
+                    var aLow = a.name.toLowerCase();
+                    var bLow = b.name.toLowerCase();
+                    if( aLow < bLow ) return -1;
+                    if( aLow > bLow ) return 1;
+                    return 0;
+                },
+                onTapUploadExtension: function () {
+                    if (!this.selectedExtension) {
+                        return;
+                    }
+                    this.fire('upload-extension', {extension: this.selectedExtension});
+                },
+                onTapCreateExtension: function () {
+                    this.newExtensionName = "";
+                    this.newExtensionDesc = "";
+                    this.$.createExtension.open();
+                },
+                createExtension: function (e) {
+                    if ((!this.newExtensionName) || (this.newExtensionName=="")) {
+                        this.$.createExtension.close();
+                        return;
+                    }
+                    this.fire('create-extension', {createName:this.newExtensionName, createDescription:this.newExtensionDesc});
+                    this.$.createExtension.close();
+                },
+                createExtensionCancel: function (e) {
+                    this.$.createExtension.close();
+                },
+                _checkAnd: function() {
+                    for (i = 0; i < arguments.length; i++) {
+                        if (!arguments[i]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+            });
+        }());
+    </script>
+</dom-module>

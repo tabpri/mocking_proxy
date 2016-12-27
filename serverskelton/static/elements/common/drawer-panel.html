@@ -1,0 +1,82 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+
+<dom-module id="drawer-panel">
+    <template>
+        <style>
+            :host {
+                @apply(--layout-vertical);
+                position: relative;
+                background-color: var(--code-color-list-base);
+                height: 100%;
+            }
+            
+            :host > .header {
+                @apply(--layout-flex-none);
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+                background-color: var(--code-color-panel-base);
+                height: 40px;
+                padding: 0 15px 0 20px;
+            }
+
+            :host > .header > .left {
+            }
+
+            :host > .header > .title {
+                padding: 0px;
+                color: var(--code-color-font-white);
+                width: 100%;
+                height: 100%;
+            }
+            
+            flex-label {
+                --flex-label-height: 40px;
+                --flex-label-line-height: 40px;
+                --flex-label-font-size: 18px;
+            }
+            
+            :host > .header > .right {
+            }
+
+            :host > .body {
+                @apply(--layout-flex-auto);
+                border-left: 1px #d4d5d6 solid;
+                background-color: var(--code-color-list-base);
+                color: var(--code-color-font-black);
+                padding: 10px 20px 20px 20px;
+                overflow: auto;
+                @apply(--layout-vertical);
+            }
+
+            :host > .footer {
+                height: 70px;
+            }
+        </style>
+        
+        <div class="header">
+            <div class="left"><content select=".d_header_left"></content></div>
+            <div class="title"><label><flex-label><content select=".d_header_title"></content></flex-label></label></div>
+            <div class="right"><content select=".d_header_right"></content></div>
+        </div>
+        <div class="body"><content select=".d_body"></content></div>
+        <div class="footer" hidden="[[nofooter]]"><content select=".d_footer"></content></div>
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "drawer-panel",
+                properties: {
+                    nofooter: {
+                        type: Boolean,
+                        value: false,
+                        notify: true,
+                    },
+                }
+            });
+
+        }());
+    </script>
+</dom-module>

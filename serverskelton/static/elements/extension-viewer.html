@@ -1,0 +1,246 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<link rel="import" href="/static/elements/common/working-dialog.html">
+<link rel="import" href="/static/elements/common/message-dialog.html">
+<link rel="import" href="/static/elements/base-styles.html">
+<link rel="import" href="/static/elements/extension-drawer.html">
+<link rel="import" href="/static/elements/object-table/object-table.html">
+<link rel="import" href="/static/elements/object-table/text-column.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="extension-viewer">
+    <template>
+        <style include="base-styles"></style>
+
+        <style>
+            :host {
+                background-color: var(--code-color-background);
+                color: var(--code-color-font-white);
+            }
+
+            .menu_bar {
+                @apply(--layout-horizontal);
+                width: 100%;
+                height: 40px;
+                background-color: var(--code-color-list-base);
+            }
+
+            .main_area {
+                @apply(--layout-flex);
+                position: relative;
+            }
+
+            .list_area {
+                @apply(--layout-fit);
+                display: block;
+                height: 100%;
+            }
+
+            responsive-table {
+                height: 100%;
+            }
+
+            .list {
+                @apply(--layout-fit);
+            }
+
+            extension-drawer {
+                z-index: 2;
+            }
+        </style>
+
+        <working-dialog id="workingDialog">It is during the upload of the project. Please wait.</working-dialog>
+        <message-dialog id="messageDialog" mode="[[messageDialogType]]">[[messageDialogText]]</message-dialog>
+
+        <div class="menu_bar">
+
+        </div>
+
+        <div class="main_area">
+            <div class="list_area">
+                <object-table class="list" items="{{_apps}}" order="{{order}}" dir="{{dir}}" selected="{{selected}}" toggle manual-sort>
+                    <text-column label="AppName" path="name" align="left"></text-column>
+                    <text-column label="Description" path="description" align="left"></text-column>
+                    <text-column label="URL" path="url" align="left"></text-column>
+                </object-table>
+            </div>
+        </div>
+
+        <extension-drawer hidden="[[!openextensiondrawer]]" selected-app="[[_selectedApp]]" extensions="[[_extensions]]"></extension-drawer>
+
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "extension-viewer",
+                properties: {
+                    selected: {
+                        type: String,
+                        observer: "_changeSelected",
+                        notify: true,
+                    },
+                    container: {
+                        type: Object,
+                        notify: true,
+                    },
+                    _selectedApp: {
+                        type: Object,
+                        notify: true,
+                    },
+                    openextensiondrawer: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    _extensions: {
+                        type: Array,
+                        notify: true,
+                    }
+                },
+                attached: function() {
+                    this.listen(window, 'extension-drawer', 'openExtensionDrawer');
+                    this.listen(window, 'create-extension', 'doneCreateMode');
+                    this.listen(window, 'upload-extension', 'doneUploadMode');
+                },
+                detached: function() {
+                    this.unlisten(window, 'extension-drawer', 'openExtensionDrawer');
+                    this.unlisten(window, 'create-extension', 'doneCreateMode');
+                    this.unlisten(window, 'upload-extension', 'doneUploadMode');
+                },
+                openExtensionDrawer: function(e, detail) {
+                    if (detail.request == 'open'){
+                        this.openextensiondrawer = true;
+                    } else {
+                        this.openextensiondrawer = false;
+                        this.selected = null;
+                    }
+                },
+                _changeSelected: function (e) {
+                    if (this.selected) {
+                        var id = this.selected;
+                        var selectItems = this._apps.filter(function(e){
+                            return (e.id == id);
+                        });
+
+                        if (selectItems.length > 0) {
+                            this._selectedApp = selectItems[0];
+                            this.fire('extension-drawer', {request: 'open'});
+                        }
+                    } else {
+                        this.fire('extension-drawer', {request: 'close'});
+                    }
+                },
+                ready: function () {
+                    this.getExtensions();
+                    this.getApps();
+                    this._modeExtension = "upload";
+                    this._selectedApp = "";
+                    this._createName = "";
+                    this._createDescription = "";
+                },
+                getExtensions: function () {
+                    api.get("/extensions").then(function (data) {
+                        this._extensions = data.response;
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                    })
+                },
+                getApps: function () {
+                    api.get("/dev/apps").then(function (data) {
+                        this._apps = data.response;
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                    })
+                },
+                doneUploadMode: function (e, detail) {
+
+                    if (!detail.extension){
+                        return;
+                    } else {
+                        this._selectedExtension = detail.extension;
+                    }
+
+                    this.$.workingDialog.toggle();
+                    codeApi.get("/containers/:container_id/project", {
+                        params: {
+                            container_id: this.container.container_id
+                        },
+                        responseType: 'blob'
+                    }).then(function (data) {
+                        var formData = new FormData();
+                        var file = new File([data], 'test.tar');
+                        formData.append("file", file);
+                        console.log(file);
+                        return api.put("/extensions/:extension_id/res", {
+                            params: {
+                                extension_id: this._selectedExtension.id,
+                            },
+                            body: formData,
+                        });
+                    }.bind(this)).then(function (data) {
+                        console.log(data);
+                        this.messageDialogType = "Success";
+                        this.messageDialogText = this.resource.successfully_created;
+                        this.$.messageDialog.show();
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                        this.messageDialogType = "Error";
+                        this.messageDialogText = this.resource.this.resource;
+                        this.$.messageDialog.show();
+                    }.bind(this)).then(function () {
+                        this.$.workingDialog.toggle();
+                    }.bind(this));
+                },
+                doneCreateMode: function (e, detail) {
+
+                    if (!detail.createName){
+                        return;
+                    } else {
+                        this._createName = detail.createName;
+                        this._createDescription = detail.createDescription;
+                    }
+
+                    var extensionId;
+                    this.$.workingDialog.toggle();
+                    api.post("/extensions", {
+                        body: {
+                            name: this._createName,
+                            description: this._createDescription,
+                            app_id: this._selectedApp.id,
+                            enabled: true,
+                        }
+                    }).then(function (data) {
+                        console.log(data);
+                        extensionId = data.response.id;
+                        return api.get("/extensions");
+                    }.bind(this)).then(function (data) {
+                        this._extensions = data.response;
+                        this.messageDialogType = "Success";
+                        this.messageDialogText = this.resource.successfully_created;
+                        this.$.messageDialog.show();
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                        this.messageDialogType = "Error";
+                        this.messageDialogText = this.resource.failed_to_create;
+                        this.$.messageDialog.show();
+                    }.bind(this)).then(function () {
+                        this.$.workingDialog.toggle();
+                    }.bind(this));
+                },
+                checkAnd: function(){
+                    for(i = 0; i < arguments.length; i++){
+                        if(!arguments[i]){
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                eq: function(a, b) {
+                    return a == b;
+                },
+            });
+
+        }());
+    </script>
+</dom-module>

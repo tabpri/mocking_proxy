@@ -1,0 +1,323 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="table-common.html">
+
+<dom-module id="object-table">
+
+    <style>
+        :host {
+            display: block;
+            position: relative;
+            background-color: #e6e6e6;
+        }
+
+        .header {
+            height: 30px;
+            background-color: var(--table-header-bg-color, #333);
+        }
+
+        #rows {
+            display: block;
+            position: relative;
+            overflow: auto;
+            overflow-x: hidden;
+            z-index: 1;
+            height: calc(100% - 30px);
+        }
+
+        .row {
+            height: 34px;
+            background-color: #fff;
+        }
+
+        .row + .row {
+            margin-top: 1px;
+        }
+
+        .row[status~="sub-selected"] {
+            background-color: #cae4ea;
+        }
+
+        .row[status~="selected"] {
+            background-color: #0071bc;
+        }
+
+        .cols {
+            @apply(--layout-fit);
+            @apply(--layout-horizontal);
+            margin: 0 15px;
+            z-index: 2;
+            pointer-events: none;
+            color: var(--table-header-color, #999);
+        }
+    </style>
+
+    <template>
+        <div class="header"></div>
+        <div id="rows" on-scroll="_scrollRows">
+            <template id="repeater" is="dom-repeat" items="{{_table.items}}" sort="{{_table.sort}}" filter="{{_table.filter}}">
+                <div class="row" status$="[[_status(_table.row.*, item.*)]]" on-tap="_selectRow"></div>
+            </template>
+        </div>
+        <div class="cols" id="cols" style$="right:{{_scrollBarWidth}}px">
+            <content></content>
+        </div>
+    </template>
+
+    <script>
+
+        Polymer({
+            is: 'object-table',
+
+            behaviors: [ListTable.BaseBehavior],
+
+            properties: {
+                items: Array,
+                order: {
+                    type: String,
+                    value: '',
+                    notify: true
+                },
+                dir: {
+                    type: String,
+                    value: 'asc',
+                    notify: true
+                },
+                filter: {
+                    type: Function,
+                    value: null
+                },
+                offset: {
+                    type: Number,
+                    value: 0,
+                    notify: true
+                },
+                limit: {
+                    type: Number,
+                    value: Infinity
+                },
+                count: {
+                    type: Number,
+                    value: 0,
+                    notify: true
+                },
+                selected: {
+                    type: String,
+                    value: '',
+                    notify: true
+                },
+                sideMargin: {
+                    type: Number,
+                    value: 15
+                },
+                toggle: {
+                    type: Boolean,
+                    value: false
+                },
+                pathForSelected: {
+                    type: String,
+                    value: 'id'
+                },
+                manualSort: {
+                    type: Boolean,
+                    value: false
+                }
+            },
+
+            observers: [
+                '_notifyToTable(items.*, _table)',
+                '_notifyToTable(order.*, _table)',
+                '_notifyToTable(dir.*, _table)',
+                '_notifyToTable(offset.*, _table)',
+                '_notifyToTable(manualSort.*, _table)',
+                '_notifyToProp(_table.items.*)',
+                '_notifyToProp(_table.order.*)',
+                '_notifyToProp(_table.dir.*)',
+                '_notifyToTableRow(selected.*, _table)',
+                '_notifyToTableRow(pathForSelected.*, _table)',
+                '_notifyToPropRow(_table.row.selected.*)',
+                '_notifyToChildren(_table.*)',
+                '_itemsChanged(items.splices)',
+                '_filterChanged(filter, offset, limit, _table)',
+                '_updateCount(items.*, filter)',
+                '_resetOffset(filter, order, dir)'
+            ],
+
+            attached: function() {
+                var me = this;
+                var check = function() {
+                    me._scrollBarWidth = me.$.rows.offsetWidth - me.$.rows.scrollWidth;
+                    me._handle = setTimeout(check, 200);
+                };
+                check();
+                this._observer = Polymer.dom(this).observeNodes(function(info) {
+                    info.addedNodes.filter(function(node) {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            node._table = me._table;
+                            me.listen(node, '_table-changed', '_notifyToParent');
+                            me.listen(node, 'table-render', 'render');
+                        }
+                    });
+                    info.removedNodes.filter(function(node) {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            me.unlisten(node, '_table-changed', '_notifyToParent');
+                            me.unlisten(node, 'table-render', 'render');
+                            node._table = null;
+                        }
+                    });
+                });
+            },
+
+            detached: function() {
+                clearTimeout(this._handle);
+                Polymer.dom(this).unobserveNodes(this._observer);
+            },
+
+            ready: function() {
+                this._table = {
+                    items: this.items,
+                    order: this.order,
+                    dir: this.dir,
+                    scrollTop: 0,
+                    filter: null,
+                    sort: null,
+                    row: {
+                        selected: this.selected,
+                        pathForSelected: this.pathForSelected,
+                        pathForSubSelected: null,
+                    }
+                };
+            },
+
+            _notifyToTable: function(e) {
+                if (e.value !== undefined) {
+                    this.set('_table.' + e.path, e.value);
+                }
+            },
+
+            _notifyToProp: function(e) {
+                if (e.value !== undefined) {
+                    this.set(e.path.substr(7), e.value);
+                }
+            },
+
+            _notifyToTableRow: function(e) {
+                if (e.value !== undefined) {
+                    this.set('_table.row.' + e.path, e.value);
+                }
+            },
+
+            _notifyToPropRow: function(e) {
+                if (e.value !== undefined) {
+                    this.set(e.path.substr(11), e.value);
+                }
+            },
+
+            _notifyToParent: function(e) {
+                if (e.detail.value !== undefined) {
+                    this.set(e.detail.path, e.detail.value);
+                }
+            },
+
+            _notifyToChildren: function(e) {
+                if (e.value !== undefined) {
+                    this.getEffectiveChildren().forEach(function(col) {
+                        if (col.set instanceof Function) {
+                            col.set(e.path, e.value);
+                        }
+                    });
+                }
+            },
+
+            _scrollRows: function(e) {
+                this.set('_table.scrollTop', e.target.scrollTop);
+            },
+
+            _selectRow: function(e) {
+                var selected = ListTable.prop(e.model.item, this.pathForSelected);
+
+                if (this.toggle) {
+                    this.selected = (this.selected) != selected ? selected : '';
+                }
+                else {
+                    this.selected = selected;
+                }
+            },
+
+            _itemsChanged: function(record) {
+                var me = this;
+                var clear;
+                if (record) {
+                    clear = record.indexSplices.some(function(r) {
+                        return r.removed.some(function(item) {
+                            return me.selected == ListTable.prop(item, me.pathForSelected);
+                        });
+                    });
+                }
+//                else {
+//                    clear = !this.items || this.items.every(function(item) {
+//                        return me.selected != ListTable.prop(item, me.pathForSelected);
+//                    });
+//                }
+                if (clear) {
+                    this.selected = '';
+                }
+            },
+
+            _filterChanged: function(filter, offset, limit) {
+                if (typeof filter == 'string') {
+                    filter = this.domHost[filter];
+                    if (filter instanceof Function) {
+                        filter = filter.bind(this.domHost);
+                    }
+                }
+
+                var me = this;
+
+                function baseFilter(item) {
+                    var sort = me.get('_table.sort');
+                    var items = me.items || [];
+                    items = filter ? items.filter(filter) : items.slice();
+                    if (sort) {
+                        items.sort(sort);
+                    }
+                    var idx = items.indexOf(item);
+                    return offset <= idx && idx < (offset + limit);
+                }
+
+                this.debounce('_filterChanged', function() {
+                    this.set('_table.filter', baseFilter);
+                });
+            },
+
+            _updateCount: function(itemsInfo, filter) {
+                if (typeof filter == 'string') {
+                    filter = this.domHost[filter];
+                    if (filter instanceof Function) {
+                        filter = filter.bind(this.domHost);
+                    }
+                }
+                var items = itemsInfo.base || [];
+                items = filter ? items.filter(filter) : items;
+                this.count = items.length;
+            },
+
+            render: function() {
+                this.debounce('render', function() {
+                    this.$.repeater.render();
+                    this.getEffectiveChildren().forEach(function(col) {
+                        if (col._render instanceof Function) {
+                            col._render();
+                        }
+                    });
+                }, 1);
+            },
+
+            _resetOffset: function() {
+                this.async(function() {
+                    this.offset = 0;
+                }, 1);
+            },
+        });
+
+    </script>
+</dom-module>

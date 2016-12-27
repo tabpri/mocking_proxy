@@ -1,0 +1,77 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-dropdown/iron-dropdown.html">
+<link rel="import" href="/static/elements/base-styles.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+<dom-module id="drop-down">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            :host {
+                display: block;
+                position: relative;
+            }
+            
+            #dropdown {
+                max-width: 400px;
+                border: solid 1px var(--code-color-border);
+                background-color: var(--code-color-background-white);
+                color: var(--code-color-font-black);
+                box-sizing: border-box;
+                @apply(--drop-down-dropdown);
+            }
+            
+            .dropdown-button {
+                height: 100%;
+                width: 100%;
+                @apply(--drop-down-dropdown-button);
+            }
+            
+            .dropdown-button[no-event] {
+                pointer-events: none;
+                @apply(--drop-down-dropdown-button-no-event);
+            }
+
+        </style>
+        <div class="dropdown-button" on-tap="open" no-event$="[[_opened]]">
+              <content select=".dropdown-trigger"></content>
+        </div>
+        <div class="dropdown-wrapper" on-tap="_closeDropDown">
+            <iron-dropdown id="dropdown" opened="{{_opened}}"
+                vertical-align="[[verticalAlign]]"
+                horizontal-align="[[horizontalAlign]]"
+                disabled="[[disabled]]"
+                no-scroll$="[[noscroll]]">
+                <div class="dropdown-content">
+                    <content></content>
+                </div>
+            </iron-dropdown>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'drop-down',
+                properties: {
+                verticalAlign: String,
+                horizontalAlign: String,
+                disabled: Boolean,
+            },
+            attached: function() {
+                this.listen(window, 'close-dropdown', '_closeDropDown');
+            },
+            detached: function() {
+                this.unlisten(window, 'close-dropdown', '_closeDropDown');
+            },
+            open: function() {
+                this.$.dropdown.style.minWidth = this.offsetWidth + 'px';
+                this.$.dropdown.open();
+            },
+            _closeDropDown: function() {
+                //iron-dropdownがcloseするがタイミングが遅いため、class="dropdown-wrapper"のタグタップ時にすぐにクローズしてやってます
+                if(this.$.dropdown.opened){
+                    this.$.dropdown.close();
+                }
+            },
+        });
+    </script>
+</dom-module>

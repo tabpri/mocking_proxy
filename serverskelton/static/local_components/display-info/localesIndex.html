@@ -1,0 +1,60 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<!--
+## usage and param
+xxxx:
+yyyy:
+-->
+<dom-module id="locales-index">
+    <script>
+        (function () {
+            Polymer({
+                is: "locales-index",
+                properties: {
+                    displayInfos: {
+                        type: Array,
+                        notify: true,
+                    },
+                    model: {
+                        type: Array,
+                        notify: true,
+                        observer:"modelChanged",
+                    },dictionary: {
+                        type: Object,
+                        notify: true,
+                        observer:"dictionaryChanged"
+                    },
+                },
+                modelChanged: function(){
+                    this.fire("localesFetched",this.model)
+                },
+                dictionaryChanged: function(){
+                    this.fire("dictionaryFetched",this.model)
+                },
+                attached: function () {
+                    this.fetchLocales();
+                    this.fetchDictionary();
+                },
+                fetchLocales: function(){
+                    self=this
+                    var path = location.origin + "/static/locales/index-" + this._getBrowserLocale() + ".json";
+                    axios.get(path).then(function(response) {
+                        self.set("model",response.data);
+                    });
+                },
+                fetchDictionary: function(){
+                    self=this
+ 
+                    var path = location.origin + "/static/locales/" + this._getBrowserLocale() + ".json";
+                    axios.get(path).then(function(response) {
+                        self.set("dictionary",response.data);
+ 
+                    });
+                },
+                _getBrowserLocale: function() {
+                    return navigator.language;
+                },
+ 
+            });
+        }());
+    </script>
+</dom-module>

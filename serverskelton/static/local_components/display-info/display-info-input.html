@@ -1,0 +1,160 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+<link rel="import" href="./localesIndex.html">
+<link rel="import" href="./display-info-attribute.html">
+<!--
+## usage and param
+path:the app-route
+scope: you can ommit. use this if you have more than two-route.
+example: scope:code makes you
+-->
+    <dom-module id="display-info-input">
+        <template>
+            <style>
+                :host{
+                    background-color: black;
+ 
+                }
+                :host > .main {
+                    background-color: #fff;
+                    color: #000;
+                    border: 1px solid #CCCCCC;
+                    @apply(--panel-box-main-style);
+                    margin-bottom: 10px;
+                }
+                :host > .main .title {
+                    background-color: #ccc;
+                    color: #333;
+                    font-size: 14px;
+                    height: 28px;
+                    line-height: 28px;
+                    padding: 0px 15px;
+                }
+                :host > .main .body{
+                    background-color:#fff;
+                }
+                .body-bottom {
+                    @apply(--layout-horizontal);
+                    margin: 15px 15px 15px 0px;
+                }
+                .body-bottom .space {
+                    @apply(--layout-flex);
+                }
+                /*.body {*/
+                    /*@apply(--layout-vertical);*/
+                    /*@apply(--layout-center-justified);*/
+                    /*@apply(--layout-flex-auto);*/
+                /*}*/
+            </style>
+            <i18n-data value="{{resource}}"></i18n-data>
+            <div class="main">
+                <div class="title">{{languageLabel}}</div>
+                <div class="body">
+                    <content select=".body"></content>
+                <template is="dom-repeat" items="{{attrs}}" >
+                    <display-info-attribute attr="[[item]]" object="[[displayInfo]]" dictionary="[[resource]]" isEditMode="[[isEditMode]]"></display-info-attribute>
+                </template>
+                <div class="body-bottom">
+                    <div class="space"></div>
+                    <content select=".body-bottom"></content>
+                </div>
+                </div>
+            </div>
+        </template>
+    <script>
+        (function () {
+            Polymer({
+                is: "display-info-input",
+                properties: {
+                    displayInfo: {
+                        type: Object,
+                        notify: true,
+                        invalid:true,
+                        observer:"displayInfoChanged"
+                    },languageLabel: {
+                        type: Object,
+                        notify: true,
+                    },locales: {
+                        type: Array,
+                        notify: true,
+                        // observer:"setLanguageLabel",
+                    },attrs: {
+                        type: Array,
+                        notify: true,
+                        // observer:"attrsChanged",
+                    },resource: {
+                        type: Object,
+                        notify: true,
+                        observer:"extractDislayInfoAttrs",
+                    },allImagesUploaded: {
+                        type: Boolean,
+                        notify: true
+                    },isEditMode: {
+                        type: Boolean,
+                        notify: true
+                    },
+                },
+                displayInfoChanged: function(){
+                    console.log("mark this.displayInfos in displayInfoChanged")
+                    console.log(this.displayInfo)
+
+
+                },
+
+
+                _localizeLang: function(lang) {
+                    lang = I18n.normalizeLanguage(lang);
+                    var name = this.resource && this.resource.languages[lang];
+                    return name || lang;
+                },
+                localesFetched: function(e){
+                    this.locales = e.detail
+                },
+                attached: function () {
+                    this.listen(document.body, 'localesFetched', 'localesFetched')
+                },
+                isInvalid: function(){
+                    var anyInvalids = false;
+                    if(this.attrs==undefined) return
+                    var children =  document.querySelectorAll('display-info-attribute')
+                    children.forEach(function(attr){
+                        anyInvalids = (attr.isInvalid()||anyInvalids)
+                    })
+                    return anyInvalids
+                },
+                extractDislayInfoAttrs: function(){
+                    dislayInfoAttrs = []
+                    management_attribute = "language_tag"
+                    objectAttributes = Object.keys(this.displayInfo)
+                    self=this
+ 
+                    objectAttributes.forEach(function(attr){
+                        // FIXME: attrを整理する必要がある
+                        if(attr != management_attribute && attr != "invalid" && attr != "validate" && attr != "attrs"){
+                            label = "label"
+                            if(self.resource!=undefined){
+                                label=self.resource[attr]!=undefined?self.resource[attr]:label
+                            }                                console.log("mark image_url")
+                            console.log(attr)
+
+                            if ( attr == "image_url" ){
+                                attr = "image"
+                            }
+                            attributeObject = {
+                                name: attr,
+                                label:label
+                            }
+                            dislayInfoAttrs.push(attributeObject)
+                        }
+                    })
+                    this.attrs = dislayInfoAttrs
+                    if (this.displayInfo.language_tag) {
+                        this.set('languageLabel', this._localizeLang(this.displayInfo.language_tag));
+                    }
+
+                },
+ 
+            });
+        }());
+    </script>
+</dom-module>

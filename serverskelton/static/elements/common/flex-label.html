@@ -1,0 +1,48 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<dom-module id="flex-label">
+    <template>
+        <style>
+            :host {
+                @apply(--layout-flex);
+                height: var(--flex-label-height, 30px);
+            }
+            .parent {
+                @apply(--layout-flex);
+                height: 100%;
+                position: relative;
+            }
+            .child {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                line-height: var(--flex-label-line-height, 30px);
+                font-size: var(--flex-label-font-size, 12px);
+                font-weight: var(--flex-label-font-weight, normal);
+                white-space: var(--flex-label-white-space, nowrap);
+                overflow: var(--flex-label-overflow, hidden);
+                text-overflow: var(--flex-label-text-overflow, ellipsis);
+                @apply(--flex-label-child);
+            }
+        </style>
+        
+        <div class="parent">
+            <div class="child" id="child">
+                <content></content>
+            </div>
+        </div>
+        
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "flex-label",
+            });
+
+        }());
+    </script>
+</dom-module>

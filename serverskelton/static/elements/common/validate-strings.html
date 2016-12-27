@@ -1,0 +1,89 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-validator-behavior/iron-validator-behavior.html">
+
+<dom-module id="validate-strings">
+    <template>
+        <style>
+        </style>
+
+        <div hidden="{{!invalid}}">{{message}}</div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'validate-strings',
+            properties: {
+                value: {
+                    type: Object,
+                    observer: "validate",
+                    notify: true,
+                },
+                invalid: {
+                    type: Boolean,
+                    reflectToAttribute: true,
+                    value: false,
+                    notify: true,
+                },
+                message: {
+                    type: String,
+                    value : "",
+                    notify: true,
+                },
+                strings: {
+                    type: Array,
+                    value : function () {return []},
+                    notify: true,
+                },
+                inputValue: {
+                    type: String,
+                    notify: true,
+                }
+            },
+            validate: function (value) {
+                this.invalid = false;
+
+                this._checkDuplication(value);
+                this._checkRegExp();
+            },
+            _checkDuplication: function (targetValue) {
+                console.log("mark _checkDuplication")
+
+                if(this.strings.length == 0) {
+                    console.log("mark this.strings.length")
+                    console.log(this.strings.length)
+                    this.strings.length
+                    return;
+                }
+                var self = this;
+                this.strings.forEach( function(str) {
+                    console.log("mark str")
+                    console.log(str)
+
+                    console.log("mark targetValue")
+                    console.log(targetValue)
+
+                    if(str == targetValue) {
+                        self.invalid = true;
+                        self.message = "It's not possible to duplicate the name.";
+                        console.log("mark self.message")
+                        console.log(self.message)
+                        console.log("mark self.invalid")
+                        console.log(self.invalid)
+
+
+                        return;
+                    }
+                });
+                console.log("mark _checkDuplication without none to happen")
+            },
+            _checkRegExp: function () {
+                var self = this;
+                if(this.inputValue.match(/[\/\(\)\x5c\x2f\:\x2a\?\"\<\>\| \t\s]/g)) {
+                    self.invalid = true;
+                    self.message = "Invalid name.";
+                    return;
+                }
+            }
+        });
+    </script>
+</dom-module>

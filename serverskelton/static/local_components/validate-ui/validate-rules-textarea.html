@@ -1,0 +1,130 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<script>
+    Polymer({
+        is: 'validate-rules-textarea',
+        extends: 'textarea',
+        properties: {
+            validType: {
+                type: String,
+            },
+            errorMessages: {
+                notify: true,
+                type: Array,
+                value: function () { return [];},
+            },
+            invalids: {
+                type: Array,
+                notify: true,
+            },
+            focusOut: {
+                type: Boolean,
+                value: false,
+            }
+        },
+        listeners: {
+            'input': '_onInput',     // Realtime Validate
+            'blur' : '_onBlur',       // FocusOut Validate (Blur MODE)
+            'change' : '_onChange'      // For type="file"
+        },
+        _onInput: function(event) {
+            if (!this.focusOut) {
+                this._onValidation(event.target.value);
+            }
+        },
+        _onBlur: function(event) {
+            if (this.focusOut) {
+                this._onValidation(event.target.value);
+            }
+        },
+        _onChange(event) {
+            if (this.validType && this.validType.toLowerCase() == "file") {
+                if (event.target.value) {
+                    this._onValidation(event.target.value);
+                }
+            }
+        },
+        validate: function(value) {
+            if (value) {
+                this._onValidation(value);
+                return;
+            }
+            this._onValidation(this.value);
+        },
+        _onValidation: function(value) {
+            this.errorMessages = [];
+            var type = this.validType.toLowerCase();
+            var valid = true;
+            
+            if (type == "name") {
+                valid &= this._checkEmpty(value);
+                valid &= this._checkMaxLength(value, 255);
+            }
+            else if (type == "description") {
+                valid &= this._checkEmpty(value);
+            }
+            else if (type == "url") {
+                valid &= this._checkEmpty(value);
+                valid &= this._checkUrlFormat(value);
+            }
+            else if (type == "id") {
+                valid &= this._checkEmpty(value);
+                valid &= this._checkMinLength(value, 8);
+                valid &= this._checkMaxLength(value, 255);
+            }
+            else if (type == "file") {
+                valid &= this._checkEmpty(value);
+            }
+
+            if (!valid) {
+                if (this.invalids.indexOf(this.title) < 0) {
+                    this.push("invalids", this.title);
+                }
+            } else {
+                var index = this.invalids.indexOf(this.title);
+                if (index >= 0) {
+                    this.splice("invalids", index, 1);
+                }
+            }
+        },
+        _checkEmpty: function(value) {
+            if (!value) {
+                this.push("errorMessages", "required_msg");
+                return false;
+            }
+            return true;
+        },
+        _checkMaxLength: function(value, len) {
+            if ((value) && (value.length > len)) {
+                // this.push("errorMessages", "Please enter " + len + " characters or less.");
+                this.push("errorMessages", "less_msg");
+                return false;
+            }
+            return true;
+        },
+        _checkMinLength: function(value, len) {
+            if ((value) && (value.length < len)) {
+                // this.push("errorMessages", "Please enter " + len + " characters or more.");
+                this.push("errorMessages", "more_msg");
+                return false;
+            }
+            return true;
+        },
+        _checkUrlFormat: function(value) {
+            if (value) {
+                if (!value.match(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/)){
+                    this.push("errorMessages", "url_msg");
+                    return false;
+                }
+            }
+            return true;
+        },
+        clear: function() {
+            this.errorMessages = [];
+            var index = this.invalids.indexOf(this.title);
+            if (index >= 0) {
+                this.splice("invalids", index, 1);
+            }
+        },
+    });
+</script>

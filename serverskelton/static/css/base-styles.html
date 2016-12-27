@@ -1,0 +1,99 @@
+<dom-module id="base-styles">
+  <template>
+    <style>
+        :host {
+            --size-app-panel-height: 90px;
+            --size-app-panel-width: 200px;
+            --size-app-panel-inner-width: 190px;
+            
+            --size-font-smallest: 10px;
+            --size-font-normal: 12px;
+            --size-font-large: 14px;
+            --size-font-largest: 18px;
+            
+            --color-bg-color-black: #333333;
+            --color-bg-color-light-gray: #e0e0e0;
+            --color-bg-color-gray: #999999;
+            --color-bg-color-white: #ffffff;
+            
+            --color-font-black: #333333;
+            --color-font-right-gray: #e0e0e0;
+            --color-font-gray: #999999;
+            --color-font-white: #f2f2f2;
+            --color-font-pure-white: #ffffff;
+            --color-font-link: #0071bc;
+            --color-font-placeholder: #cccccc;
+            
+            --color-theme-runtime-manager: #3c2775;
+            --color-theme-explorer: #2a495e;
+            --color-theme-insight: #0f8b43;
+            --color-theme-code: #4d4d4d;
+            --color-theme-developer-center: #913f16;
+            
+            --color-border: #cccccc;
+            --color-active: #0071bc;
+            --color-background-modal: #e6e6e6;
+            
+            --btn-color-bg-color-ok: var(--color-active);
+            --btn-color-bg-color-ng: #ea505c;
+            --btn-color-bg-color-cancel: var(--color-bg-color-gray);
+            --btn-color-bg-color-non-active: var(--color-bg-color-light-gray);
+            --btn-color-bg-color-common: #ffffff;
+            --btn-color-bg-color-close: #B3B3B3;
+            --btn-color-bg-color-project-add: #22b573;
+            --btn-color-bg-color-workflow: #f7931e;
+            --btn-color-font: var(--color-font-white);
+            --btn-color-font-non-active: var(--color-font-right-gray);
+            
+            --btn-size-a: {
+                height: 24px;
+                line-height: 24px;
+                padding-left: 10px;
+                padding-right: 10px;
+                font-size: 12px;
+                cursor: pointer;
+                cursor: hand;
+                text-align: center;
+            }
+            
+            --btn-size-b: {
+                height: 30px;
+                line-height: 30px;
+                padding-left: 20px;
+                padding-right: 20px;
+                font-size: 14px;
+                cursor: pointer;
+                cursor: hand;
+                text-align: center;
+            }
+            
+            --icon-size-s: {
+                width: 16px;
+                height: 16px;
+            }
+            
+            --icon-size-m: {
+                width: 24px;
+                height: 24px;
+            }
+            
+            --icon-size-l: {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
+        .icon-s  {
+            @apply(--common-parts-icon-size-s);
+        }
+        
+        .icon-m {
+            @apply(--common-parts-icon-size-m);
+        }
+        
+        .icon-l {
+            @apply(--common-parts-icon-size-l);
+        }
+    </style>
+  </template>
+</dom-module>

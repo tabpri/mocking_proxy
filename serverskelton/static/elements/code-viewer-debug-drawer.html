@@ -1,0 +1,198 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/check-pin.html">
+<link rel="import" href="/static/elements/common/drawer-panel.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+
+
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="code-viewer-debug-drawer">
+    <style include="base-styles"></style>
+    <style>
+        :host {
+            display: block;
+            position: var(--pin-postion ,absolute);
+            top: 103px;
+            bottom: 0;
+            right: 0;
+            width: 300px;
+        }
+        
+        img {
+            display: inline;
+        }
+
+        .listItem {
+            @apply(--layout-horizontal);
+            height: 30px;
+        }
+
+        .listItem label {
+            @apply(--layout-flex);
+            @apply(--layout-horizontal);
+            height: 100%;
+        }
+        
+        flex-label {
+            --flex-label-line-height: 20px;
+        }
+
+        .d_header_title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .d_header_left > ajax-img {
+            margin-top: 3px;
+            margin-right: -5px;
+            padding-right: 10px;
+            color: #E1E1E0
+
+        }
+
+        .d_header_right {
+            @apply(--layout-horizontal);
+            color: #E1E1E0
+        }
+
+        .d_header_right > ajax-img {
+            margin-left: 15px;
+        }
+
+        .d_body {
+            @apply(--layout-flex);
+        }
+        
+        .no-task {
+            @apply(--layout-flex);
+            @apply(--layout-vertical);
+            @apply(--layout-center-center);
+            @apply(--layout-center-justified);
+        }
+        
+        .no-task .button {
+            margin-top: 60px;
+            background-color: var(--code-color-project-add-button);
+            color: var(--code-color-font-white);
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+            @apply(--common-parts-btn-size-b);
+            font-size: 12px;
+        }
+
+    </style>
+
+    <template>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <drawer-panel nofooter>
+            <div class="d_header_left">
+                <ajax-img class="icon-m" src="/static/img/icn-code_debug.svg"></ajax-img>
+            </div>
+            <div class="d_header_title">{{resource.debug}}</div>
+            <div class="d_header_right">
+                <check-pin class="icon-s cursor-pointer" checked="{{pinChecked}}" ></check-pin>
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-global_edit.svg"  on-tap="_edit"></ajax-img>
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-global_close.svg"  on-tap="_close"></ajax-img>
+            </div>
+
+            <div class="d_body">
+                <div class="no-task" hidden="[[tasks.length]]">
+                    {{resource.you_can_add_a_command_for_debugging}}
+                    <div class="button" on-tap="_showCreateTask">
+                        <ajax-img class="icon-s" src="/static/img/icn-global_plus.svg"></ajax-img>
+                        New_Task
+                    </div>
+                </div>
+                <template is="dom-repeat" items="{{tasks}}" sort="sortTasks">
+                    <div class="listItem">
+                        <label class="cursor-pointer" on-tap="runCommand">
+                            <flex-label>{{item.cmd}}</flex-label>
+                        </label>
+                    </div>
+                </template>
+            </div>
+        </drawer-panel>
+    </template>
+
+
+    <script>
+        (function() {
+
+            Polymer({
+                is: 'code-viewer-debug-drawer',
+                properties: {
+                    tasks: {
+                        type: Object,
+                        notify: true,
+                    },
+                    container_id: {
+                        type: String,
+                        notify: true,
+                        observer: "setTaskList",
+                    },
+                    task: {
+                        type: Object,
+                        notify: true,
+                    },
+                    pinChecked: {
+                        type: Boolean,
+                        value: false,
+                        notify: true,
+                    },project_id: {
+                        type: String,
+                        notify: true
+                    },opendebugdrawer: {
+                        type: Boolean
+                    }
+                },
+                _edit: function () {
+                    this.fire('debug-editor', {request: 'open'});
+                },
+                _close: function () {
+                    this.fire('debug-drawer', {request: 'close'});
+                },
+                _showCreateTask: function () {
+                    this._edit();
+                    this.fire('create-task', {node:document.body, bubbles:false});
+                },
+                setTaskList: function () {
+                    console.log("task list -------------------------------")
+
+//                    if (typeof this.container_id != "String"){
+//                        return;
+//                    }
+                    codeApi.get("/projects/:project_id/tasks", {
+                        params: {
+                            project_id: this.project_id,
+                        }
+                    }).then(function (data) {
+                        console.log(data);
+                        this.tasks = data.res;
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                    }.bind(this));
+                },
+                sortTasks: function(a,b) {
+                    var aLow = a.cmd.toLowerCase();
+                    var bLow = b.cmd.toLowerCase();
+                    if( aLow < bLow ) return -1;
+                    if( aLow > bLow ) return 1;
+                    return 0;
+                },
+                runCommand: function (e) {
+                    this.fire("run-task", {
+                        container_id: this.container_id,
+                        task: e.model.item,
+                    }, {node:document.body, bubbles:false});
+
+                },
+            });
+        }());
+    </script>
+</dom-module>

@@ -1,0 +1,77 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<dom-module id="column-header">
+    <style>
+        :host([order]) {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .title {
+            padding: 0 3px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .icon {
+            width: 10px;
+            height: 20px;
+        }
+
+        .icon[blank] {
+            display: none;
+        }
+    </style>
+
+    <template>
+        <div class="title">{{label}}</div>
+        <ajax-img class="icon" src="{{_iconSrc(order, table.order, table.dir)}}"></ajax-img>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'column-header',
+
+            properties: {
+                table: Object,
+                label: String,
+                order: {
+                    type: String,
+                    reflectToAttribute: true
+                }
+            },
+
+            listeners: {
+                tap: '_select'
+            },
+
+            _select: function() {
+                if (this.table.order == this.order) {
+                    this.set('table.dir', (this.table.dir != 'asc') ? 'asc' : 'desc');
+                }
+                else {
+                    this.set('table.order', this.order);
+                }
+            },
+
+            _iconSrc: function(order, currentOrder, currentDir) {
+                if (!order) {
+                    return ''
+                }
+                else if (order != currentOrder) {
+                    return '../../img/icn-global_sort.svg';
+                }
+                else if (currentDir == 'asc') {
+                    return '../../img/icn-arrow4_up.svg';
+                }
+                else if (currentDir == 'desc') {
+                    return '../../img/icn-arrow4_down.svg';
+                }
+                else {
+                    return ''
+                }
+            }
+        });
+    </script>
+</dom-module>

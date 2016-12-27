@@ -1,0 +1,220 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/paper-slider/paper-slider.html">
+<link rel="import" href="/static/elements/common/spin-box.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+
+<dom-module id="range-slider">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            :host {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            
+            spin-box {
+                @apply(--layout-horizontal);
+            }
+            
+            .slide-area {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+                margin-left: 10px;
+                width: 100%;
+            }
+
+            .slider {
+                @apply(--layout-flex);
+                margin-bottom: 30px;
+            }
+            
+            .slider-fild {
+                @apply(--layout-horizontal);
+                position: relative;
+                margin: 10px 8px;
+                height: 4px;
+                background-color: #0071bc;
+                -webkit-border-top-left-radius: 30px;
+                -webkit-border-top-right-radius: 30px;
+                -webkit-border-bottom-right-radius: 30px;
+                -webkit-border-bottom-left-radius: 30px;
+            }
+            
+            .slider-selected-fildL {
+                position: absolute;
+                background-color: #cccccc;
+                left: 0;
+                height: 4px;
+                -webkit-border-top-left-radius: 30px;
+                -webkit-border-top-right-radius: 30px;
+                -webkit-border-bottom-right-radius: 30px;
+                -webkit-border-bottom-left-radius: 30px;
+                z-index: 1;
+            }
+            .slider-selected-fildR {
+                position: absolute;
+                background-color: #cccccc;
+                right: 0;
+                height: 4px;
+                -webkit-border-top-left-radius: 30px;
+                -webkit-border-top-right-radius: 30px;
+                -webkit-border-bottom-right-radius: 30px;
+                -webkit-border-bottom-left-radius: 30px;
+                z-index: 1;
+            }
+
+            .slider-thumbL {
+                position: absolute;
+                color: #0071bc;
+                transform: translate(-100%, 0%);
+                z-index: 2;
+            }
+            
+            .slider-thumbR {
+                position: absolute;
+                color: #0071bc;
+                z-index: 2;
+            }
+            
+            .unit {
+                @apply(--layout-flex-none);
+                color: #999999;
+                margin: auto 0 auto 10px;
+            }
+            
+            .label {
+                @apply(--layout-flex-none);
+                color: #999999;
+                margin: auto 10px auto 0;
+            }
+            
+            .maxLabel {
+                margin-left: 30px;
+            }
+            
+            .slider-input-area {
+                position: relative;
+                width: 100%;
+            }
+            
+            .slider-input-title {
+                @apply(--layout-horizontal);
+                margin-bottom: 20px;
+            }
+            
+        </style>
+        <div class="slide-area">
+            <div class="slider-input-area">
+                <div class="slider-input-title">
+                    <div class="label">[[minLabel]]</div>
+                    <spin-box min="[[_min(min,max)]]" max="[[_max(min,max)]]" value="{{minvalue}}" step="[[step]]"></spin-box>
+                    <div class="unit">[[unit]]</div>
+                    <div class="label maxLabel">[[maxLabel]]</div>
+                    <spin-box min="[[_min(min,max)]]" max="[[_max(min,max)]]" value="{{maxvalue}}" step="[[step]]"></spin-box>
+                    <div class="unit">[[unit]]</div>
+                </div>
+                <div class="slider" id="slider">
+                    <div class="slider-fild" id="sliderFild">
+                        <ajax-img class="slider-thumbL cursor-pointer" id="sliderThumbL" src="/static/img/icn-global_bar-ctrl-l.svg" on-track="_trackThumbL" style$="left: {{_thumbMarginLeft}}%"></ajax-img>
+                        <ajax-img class="slider-thumbR cursor-pointer" id="sliderThumbR" src="/static/img/icn-global_bar-ctrl-r.svg" on-track="_trackThumbR" style$="left: {{_thumbMarginRight}}%"></ajax-img>
+                        <div class="slider-selected-fildL" style$="right: {{_thumbMarginLeft}}%; width: {{_thumbMarginLeft}}%"></div>
+                        <div class="slider-selected-fildR" style$="left: {{_thumbMarginRight}}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "range-slider",
+                properties: {
+                    min: {
+                        type: Number,
+                        value: 0,
+                    },
+                    max: {
+                        type: Number,
+                        value: 100,
+                    },
+                    _thumbMarginLeft: {
+                        type: Number,
+                    },
+                    _thumbMarginRight: {
+                        type: Number,
+                    },
+                    minvalue: {
+                        type: Number,
+                        notify: true,
+                        observer: '_minvalueChanged'
+                    },
+                    maxvalue: {
+                        type: Number,
+                        notify: true,
+                        observer: '_maxvalueChanged'
+                    },
+                    _thumbRange: {
+                        type: Number,
+                        value: 5
+                    },
+                    step: {
+                        type: Number,
+                        value: 1,
+                    },
+                },
+                observers: [
+                    "_changeMin(minvalue, step)",
+                    "_changeMax(maxvalue, step)",
+                ],
+                _changeMin: function (minvalue, step) {
+                    if (typeof this.maxvalue != "number"){
+                        return;
+                    }
+                    this.maxvalue = Math.max(minvalue + step, this.maxvalue);
+                },
+                _changeMax: function (maxvalue, step) {
+                    if (typeof this.minvalue != "number"){
+                        return;
+                    }
+                    this.minvalue = Math.min(maxvalue - step, this.minvalue);
+                },
+                _min: function () {
+                    return Math.min.apply(Math, arguments);
+                },
+                _max: function () {
+                    return Math.max.apply(Math, arguments);
+                },
+                _minvalueChanged: function(val) {
+                    var thumbMarginLeft = this._commonValueChanged(val);
+                    this._thumbMarginLeft = thumbMarginLeft;
+                },
+                _maxvalueChanged: function(val) {
+                    var thumbMarginLeft = this._commonValueChanged(val);
+                    this._thumbMarginRight = thumbMarginLeft;
+                },
+                _trackThumbL: function (e) {
+                    this.minvalue = clamp(this._commonTrackThumb(e), this.min, this.max - this.step);
+                },
+                _trackThumbR: function (e) {
+                    this.maxvalue = clamp(this._commonTrackThumb(e), this.min + this.step, this.max);
+                },
+                _commonValueChanged: function (val) {
+                    var thumbMarginLeft = (val - this.min) / (this.max - this.min) * 100;
+                    return clamp(thumbMarginLeft, 0, 100);
+                },
+                _commonTrackThumb: function (e) {
+                    var sliderRect = this.$.sliderFild.getBoundingClientRect();
+                    var rate = (e.detail.x - sliderRect.left) / sliderRect.width;
+                    rate = clamp(rate, 0, 1);
+                    return Math.floor((this.max - this.min) * rate / this.step) * this.step + this.min;
+                }
+            });
+            
+            function clamp(val, min, max) {
+                return  Math.min(Math.max(val, min), max);
+            }
+        }());
+    </script>
+</dom-module>

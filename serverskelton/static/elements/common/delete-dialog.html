@@ -1,0 +1,70 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="/static/bower_components/paper-button/paper-button.html">
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="delete-dialog">
+    <template>
+        <style>
+            pre {
+                @apply(--layout-self-center);
+                min-width: 60px;
+            }
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <button-dialog modal id="deleteDialog">
+            <div class="dialog-title">{{resource.delete}}</div>
+            <div class="dialog-body">
+                <p>{{resource.do_you_really_want_to_delete_this}}</p>
+            </div>
+            <div class="buttonArea">
+                <common-button size="B" type="cancel" on-tap="_callbackCancel">{{resource.cancel}}</common-button>
+                <common-button size="B" type="accept" on-tap="_callbackAccept">{{resource.ok}}</common-button>
+            </div>
+        </button-dialog>
+        
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "delete-dialog",
+                properties: {
+                    item: {
+                        type: Object,
+                        notify: true,
+                    },
+                    callbackAccept: {
+                        type: Function,
+                    },
+                    callbackCancel: {
+                        type: Function,
+                    },
+
+                },
+                show: function (callbackAccept, callbackCancel) {
+                    this.callbackAccept = callbackAccept;
+                    this.callbackCancel = callbackCancel;
+                    this.$.deleteDialog.open();
+                },
+                close: function () {
+                    this.$.deleteDialog.close();
+                },
+                _callbackAccept: function () {
+                    if (typeof this.callbackAccept == "function"){
+                        this.callbackAccept();
+                    }
+                },
+                _callbackCancel: function () {
+                    if (typeof this.callbackCancel == "function"){
+                        this.callbackCancel();
+                    }
+                },
+            });
+
+        }());
+    </script>
+</dom-module>

@@ -1,0 +1,159 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<dom-module id="ajax-img">
+
+<style>
+    :host {
+        display: inline-block;
+        position: relative;
+        height: 24px;
+        width: 24px;
+        line-height: 1;
+        font-size: 0;
+        fill: currentcolor;
+        stroke: none;
+    }
+
+    .img {
+        pointer-events: none;
+        object-fit: contain;
+        width: inherit;
+        height: inherit;
+    }
+
+    :host([fit]) .img {
+        width: 100%;
+        height: 100%;
+    }
+
+    :host([cover]) .img {
+        object-fit: cover;
+    }
+</style>
+
+<template>
+</template>
+
+<script>
+(function() {
+
+    var _urlCache = {};
+    var _apiCache = {};
+    var _parser = new DOMParser();
+
+    Polymer({
+        is: 'ajax-img',
+
+        properties: {
+            src: {
+                type: String,
+                value: ''
+            },
+            fixedSrc: {
+                type: String,
+                notify: true,
+                readOnly: true,
+                value: ''
+            },
+            api: {
+                type: String,
+                value: ''
+            },
+            blank: {
+                type: Boolean,
+                reflectToAttribute: true,
+                notify: true
+            },
+            nested: {
+                type: Boolean,
+                value: false
+            }
+        },
+
+        observers: [
+            '_fetch(src, api, domReady)'
+        ],
+        
+        attached: function() {
+            this.async(function() {
+                this.domReady = true;
+            });
+        },
+
+        _fetch: function(src, apiPath) {
+            var re = /[^:]\/\/|\/\.[^.]*$|\/$|^[\/.]$/;
+            var p;
+
+            if (src && !re.test(src)) {
+                var host = this.domHost;
+                if (this.nested) {
+                    host = host.domHost;
+                }
+                src = host.resolveUrl(src);
+                this._setFixedSrc(src);
+                p = _urlCache[src];
+                if (!p) {
+                    p = _urlCache[src] = fetch(src).then(function(res) {
+                        return res.blob();
+                    }).then(blob2elm);
+                }
+            }
+            else {
+                this._setFixedSrc('');
+            }
+
+            if (apiPath && !re.test(apiPath)) {
+                p = _apiCache[apiPath];
+                if (!p) {
+                    p = _apiCache[apiPath] = api.get(apiPath, {responseType: 'blob'}).then(blob2elm);
+                }
+
+            }
+
+            var me = this;
+            var root = Polymer.dom(this.root);
+
+            root.innerHTML = '';
+
+            if (p) {
+                p.then(function(elm) {
+                    elm = elm.cloneNode(true);
+                    elm.classList.add('img');
+                    root.appendChild(elm);
+                    me.blank = false;
+                }).catch(function(ex) {
+                    me.blank = true;
+                });
+            }
+            else {
+                this.blank = true;
+            }
+        }
+    });
+
+    function blob2elm(blob) {
+        if (blob.type != 'image/svg+xml') {
+            var img = new Image();
+            img.src = URL.createObjectURL(blob);
+            return img;
+        }
+        return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function() {
+                var doc = new DOMParser().parseFromString(reader.result, 'image/svg+xml');
+                var svg = doc.querySelector('svg');
+                if (svg) {
+                    resolve(svg);
+                }
+                else {
+                    reject(Error(doc));
+                }
+            };
+            reader.onerror = reject;
+            reader.readAsText(blob);
+        });
+    }
+}());
+</script>
+
+</dom-module>

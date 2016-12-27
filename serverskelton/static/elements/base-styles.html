@@ -1,0 +1,140 @@
+<dom-module id="base-styles">
+  <template>
+    <style>
+        :host {
+            --code-color-background: #4d4d4d;
+            --code-color-background-white: #ffffff;
+            --code-color-background-gray: #CCCCCC;
+            --code-color-background-light-gray: #f2f2f2;
+            --code-color-background-modal: #e6e6e6;
+            --code-color-background-code-menu: #333333;
+
+            --code-color-border: #CCCCCC;
+            --code-color-border-black: #333333;
+
+            --code-color-tab-background-nonactive: #666666;
+            --code-color-tab-background-active: #333333;
+            --code-color-area-border: #e1e1e1;
+            --code-color-panel-base: #333333;
+            --code-color-panel-base-white: #f2f2f2;
+            --code-color-list-base: #f2f2f2;
+            --code-color-panel-category-title: #cccccc;
+            --code-color-panel-category-base: #ffffff;
+            --code-color-panel-group-title: #e7e7e7;
+            --code-color-panel-group-base: #ffffff;
+            --code-color-panel-background-title: #cccccc;
+            --code-color-panel-background-body: #ffffff;
+            --code-color-switch-base: #191919;
+            --code-color-switch-font: #f2f2f2;
+            --code-color-switch-active: #0071bc;
+            --code-color-switch-nonactive: #333333;
+            --code-color-gear-color: #f2f2f2;
+
+            --code-color-active: #0071bc;
+
+            --code-color-font-white: #e1e1e1;
+            --code-color-font-whitefog: #cccccc;
+            --code-color-font-whitegray: #a2a2a2;
+            --code-color-font-thingray: #999999;
+            --code-color-font-gray: #666666;
+            --code-color-font-black: #333333;
+            --code-color-project-add-button: #22b573;
+            --code-color-font-black: #4d4d4d;
+
+            /* Button */
+            --code-color-project-add-button: #22b573;
+            --code-color-button-add: #0071BC;
+            --code-color-button-accept: #0071BC;
+            --code-color-button-cancel: #B3B3B3;
+            --code-color-button-common: #ffffff;
+            --code-color-button-close: #B3B3B3;
+            --code-color-button-delete: #EA505C;
+
+            /* Border */
+            --code-color-border: var(--code-color-panel-category-title);
+            --code-color-border-code-menu: #191919;
+            --code-color-border-tool-bar: #191919;
+
+            --common-parts-btn-size-a: {
+                height: 24px;
+                line-height: 24px;
+                padding-left: 10px;
+                padding-right: 10px;
+                font-size: 12px;
+                cursor: pointer;
+                cursor: hand;
+                text-align: center;
+            }
+
+            --common-parts-btn-size-b: {
+                height: 30px;
+                line-height: 30px;
+                padding-left: 20px;
+                padding-right: 20px;
+                font-size: 14px;
+                cursor: pointer;
+                cursor: hand;
+                text-align: center;
+            }
+
+            --common-parts-icon-size-s: {
+                width: 16px;
+                height: 16px;
+            }
+
+            --common-parts-icon-size-m: {
+                width: 24px;
+                height: 24px;
+            }
+
+            --common-parts-icon-size-l: {
+                width: 32px;
+                height: 32px;
+            }
+
+            --common-parts-tab: {
+                margin-top: 3px;
+                margin-right: 2px;
+                -moz-border-radius-topleft: 10px;
+                -moz-border-radius-topright: 10px;
+                -webkit-border-top-left-radius: 10px;
+                -webkit-border-top-right-radius: 10px;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+                background-color: var(--code-color-tab-background-nonactive);
+                color: var(--code-color-font-black);
+                flex: 0 1 150px;
+                height: 40px;
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+                padding: 0px 10px 0px 10px;
+            }
+
+        }
+
+        img {
+            display: block;
+        }
+
+        .scroll-vertical {
+            overflow-y: auto;
+        }
+
+        .scroll-horizontal {
+            overflow-x: auto;
+        }
+
+        .icon-s {
+            @apply(--common-parts-icon-size-s);
+        }
+
+        .icon-m {
+            @apply(--common-parts-icon-size-m);
+        }
+
+        .icon-l {
+            @apply(--common-parts-icon-size-l);
+        }
+    </style>
+  </template>
+</dom-module>

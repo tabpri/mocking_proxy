@@ -1,0 +1,637 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/static/bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="/static/bower_components/pushstate-anchor/pushstate-anchor.html">
+
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+
+<link rel="import" href="/static/elements/common/tab-bar.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/editor-ui.html">
+<link rel="import" href="/static/elements/code-viewer-debug-drawer.html">
+<link rel="import" href="/static/elements/code-viewer-debug-editor.html">
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/common/working-dialog.html">
+<link rel="import" href="/static/elements/common/message-dialog.html">
+<link rel="import" href="/static/elements/term-ui.html">
+<link rel="import" href="/static/elements/project-tree.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+
+
+<dom-module id="code-viewer">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            :host {
+                @apply(--layout-horizontal);
+                @apply(--layout-flex);
+                flex:1;
+
+                position: relative;
+                width:100vw;
+                height:100%;
+            }
+
+            .main {
+                @apply(--layout-vertical);
+                @apply(--layout-flex);
+                flex:1;
+                position: relative;
+            }
+
+            .toolbar {
+                background-color: var(--code-color-panel-base-white);
+                color: var(--code-color-font-gray);
+                @apply(--layout-horizontal);
+                @apply(--layout-centor);
+                padding: 10px;
+                height: 40px;
+                border-bottom: 1px solid var(--code-color-border-tool-bar);
+                box-sizing: border-box;
+            }
+
+            .toolbar ajax-img{
+                margin-right: 10px;
+                color: #333333;
+            }
+
+            .toolbar ajax-img:last-child{
+                margin-right: 0px;
+            }
+
+            .toolbar ajax-img[disable]{
+                cursor: inherit;
+/*
+                -webkit-filter:grayscale(100%);
+                -moz-filter:grayscale(100%);
+                -o-filter:grayscale(100%);
+                -ms-filter:grayscale(100%);
+                filter: grayscale(100%);
+*/
+                color: #b3b3b3;
+                pointer-events: none;
+            }
+
+            .editor {
+                @apply(--layout-flex-auto);
+                @apply(--layout-vertical);
+                @apply(--layout-flex);
+            }
+            .fileTabBar{
+                background-color: var(--code-color-tab-background-nonactive);
+
+            }
+            .fileTab {
+                @apply(--common-parts-tab);
+            }
+
+            .fileTab.iron-selected {
+                background-color: var(--code-color-tab-background-active);
+                color: var(--code-color-font-white);
+            }
+
+            .fileTab ajax-img {
+                margin-left: 5px;
+            }
+
+
+
+/*
+            .fileTab div {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+                margin-left: 10px;
+                margin-top: 4px;
+            }
+*/
+
+/*
+            .fileTab div iron-icon {
+                margin: 8px;
+            }
+*/
+
+/*
+            .fileTab div p {
+                @apply(--layout-flex);
+                margin: 8px;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+*/
+
+/*
+            .fileTab div img {
+                margin: 8px 8px 8px 2px;
+            }
+*/
+
+
+            code-viewer-debug-drawer {
+                z-index: 2;
+            }
+
+            term-viewer {
+                z-index: 3;
+                background-color: var(--code-color-background);
+            }
+
+            code-viewer-debug-editor {
+                z-index: 4;
+            }
+
+            flex-label {
+                --flex-label-font-size: 14px;
+            }
+
+            [hide] {
+                display: none;
+            }
+            .main-editor {
+                display: inline-flex;
+                @apply(--layout-flex);
+            }
+            .editor {
+                width: 100%;
+                @apply(--layout-vertical);
+            }
+
+        </style>
+        <delete-dialog id="deleteDialog"></delete-dialog>
+        <message-dialog id="messageDialog" mode="[[_messageDialogType]]">[[_messageDialogText]]</message-dialog>
+        <working-dialog id="workingDialog">[[_workingDialogMessage]]</working-dialog>
+        <edit-project-dialog id="editProjectDialog"></edit-project-dialog>
+        <commit-image-dialog id="commitImageDialog"></commit-image-dialog>
+        <!--<input type="radio" name="tools" id="radioCodeEditor">-->
+
+
+        <div class="main">
+            <code-menu current-project="{{currentProject}}" index-main-contant="{{indexMainContant}}" mode="Editor"></code-menu>
+
+            <div class="toolbar">
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-code_save-project.svg" on-tap="_saveEnvironment"></ajax-img>
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-code_save.svg" disable$="[[_isIconEnable(currentProject, selectItem.hasUndo)]]" on-tap="_save"></ajax-img>
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-code_undo.svg" disable$="[[_isIconEnable(currentProject, selectItem.hasUndo)]]" on-tap="_undo"></ajax-img>
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-code_redo.svg" disable$="[[_isIconEnable(currentProject, selectItem.hasRedo)]]" on-tap="_redo"></ajax-img>
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-global_search.svg" disable$="[[!_isLoopeIconEnable(currentProject, selectItem)]]" on-tap="_find"></ajax-img>
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-code_search-txt.svg" disable$="[[!_isLoopeIconEnable(currentProject, selectItem)]]" on-tap="_replace"></ajax-img>
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-code_debug.svg" disable$="[[_isDebugTarmIconEnable(currentProject, selectItem)]]" on-tap="_openDebug"></ajax-img>
+                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-code_console.svg" disable$="[[_isDebugTarmIconEnable(currentProject, selectItem)]]" on-tap="_launchTarm"></ajax-img>
+
+                <i18n-data value="{{resource}}"></i18n-data>
+                {{resource.ok}}
+
+            </div>
+            <div class="main-editor">
+
+
+                <div class="projectTree">
+                    <project-tree id="project-tree"  tree="{{tree}}" select-item="{{selectItem}}" project="{{currentProject}}"></project-tree>
+                </div>
+
+                <!--<left-panel projects="{{projects}}" current-project="{{currentProject}}" select-item="{{selectItem}}"></left-panel>-->
+                <array-selector id="selector" items="{{files}}" selected="{{selectItem}}"></array-selector>
+                <div class="editor">
+                    <tab-bar tab-list="{{files}}" selected-tab-id="{{selectedTabIndex}}" hide$="[[!currentProject]]" class="fileTabBar">
+                        <template is="dom-repeat" items="{{files}}">
+                            <div  class="fileTab">
+                                <flex-label>[[_editable(item.hasUndo)]]{{item.name}}</flex-label>
+                                <ajax-img class="icon-s cursor-pointer" src="/static/img/icn-global_close.svg" on-tap="_closeFile"></ajax-img>
+                            </div>
+                        </template>
+                    </tab-bar>
+                    <iron-pages class="editor" selected="{{selectedTabIndex}}" items="{{_editors}}" selected-attribute="focus" hide$="[[!currentProject]]">
+                        <template is="dom-repeat" items="{{files}}">
+                            <editor-ui  class="editor" id="[[item.id]]" filename="{{item.path}}" container-id="{{item.containerId}}" has-undo="{{item.hasUndo}}" has-redo="{{item.hasRedo}}" element="{{item.element}}"></editor-ui>
+                        </template>
+                    </iron-pages>
+                    <term-viewer task="{{task}}" tab-list="{{tabList}}"></term-viewer>
+                </div>
+
+                <code-viewer-debug-drawer hidden="[[!opendebugdrawer]]" container_id="{{container_id}}" task="{{task}}" tasks="{{tasks}}" project_id="{{currentProject.id}}" opendebugeditor="[[opendebugeditor]]"></code-viewer-debug-drawer>
+                <code-viewer-debug-editor hidden="[[!opendebugeditor]]" container_id="{{container_id}}" task="{{task}}" tasks="{{tasks}}" opendebugeditor="[[opendebugeditor]]" project_id="{{currentProject.id}}"></code-viewer-debug-editor>
+
+
+            </div>
+        </div>
+
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "code-viewer",
+                properties: {
+                    currentProject: {
+                        type: Object,
+                        notify: true,
+                        value: function () {return {}},
+                        observer: "_closeFuncForChangeProject"
+                    },
+                    files: {
+                        type: Array,
+                        value: function () { return []},
+                    },
+                    selectItem: {
+                        type: Object,
+                        observer: "_openFile",
+                        notify: true,
+                        value: function () {return {hasUndo: false, hasRedo: false}}
+                    },
+                    selectedTabIndex: {
+                        type: Number,
+                        value: 0
+                    },
+                    tasks: {
+                        type: Object,
+                        notify: true,
+                    },
+                    task: {
+                        type: Object,
+                        notify: true,
+                    },
+                    opendebugdrawer: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    opendebugeditor: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    targetTask: {
+                        type: Object,
+                        notify: true,
+                    },
+                    tree: {
+                        type: Array,
+                        notify: true,
+                        observer: '_treeChanged'
+                    },
+                    editorStatus: {
+                        type: Object,
+                        notify: true,
+                        value: function () {
+                            return {
+                                hasUndo: false,
+                                hasRedo: false,
+                            }
+                        },
+                    },indexMainContant: {
+                        type: Object,
+                        notify: true,
+                        observer: 'changeMainContent'
+                    },container_id: {
+                        type: String
+                    }
+                },
+                observers: [
+                    '_selectedTabIndexChange(selectedTabIndex, files.length)',
+                    '_fetchProjectObject(project_id)',
+                    '_onProjectSet(currentProject)'
+
+                ],
+                attached: function() {
+                    this.listen(window, 'remove-file', '_removeFile');
+                    this.listen(window, 'delete-project', 'deleteProject');
+                    this.listen(window, 'debug-drawer', 'openDebugDrawer');
+                    this.listen(window, 'debug-editor', 'openDebugEditor');
+                    this.listen(document.body, 'close-files', 'closeFiles');
+                    this.listen(document.body, 'saveFile', '_save');
+                    this.listen(document.body, 'close-files-with-del-dir-or-file', 'closeFilesWithDeleteDir');
+                    var self = this;
+                    this._intervalEditorResize = setInterval(function () {
+                        self.fire('resize-editor', {node:document.body, bubbles:false});
+                    }, 200);
+                    this.listen(window, 'openProject', '_openProjectListener');
+
+                },
+                detached: function() {
+                    this.unlisten(window, 'remove-file', '_removeFile');
+                    this.unlisten(window, 'debug-drawer', 'openDebugDrawer');
+                    this.unlisten(window, 'debug-editor', 'openDebugEditor');
+                    this.unlisten(document.body, 'saveFile', '_save');
+
+                    this.unlisten(document.body, 'close-files', 'closeFiles');
+                    this.unlisten(document.body, 'close-files-with-del-dir-or-file', 'closeFilesWithDeleteDir');
+                    clearInterval(this._intervalEditorResize);
+                    this.unlisten(window, 'openProject', '_openProjectListener');
+
+                },
+                openDebugDrawer: function(e, detail) {
+                    if (detail.request == 'open'){
+                        this.opendebugdrawer = true;
+                    } else {
+                        this.opendebugdrawer = false;
+                    }
+                },
+                _treeChanged: function (e,detail){
+                    console.log("_treeChanged 1" + detail)
+                    console.log(e)
+//                    this.$.project-tree.tree=e;
+
+                },
+                openDebugEditor: function(e, detail) {
+                    console.log("mark 400")
+                    self = this;
+                    if (detail.request == 'open'){
+                        console.log("mark 401")
+                        this.opendebugeditor = true;
+                        this.targetTask = detail.targettask;
+                    } else {
+                        console.log("mark 402 else")
+
+                        this.opendebugeditor = false;
+                    }
+                    console.log("mark 403")
+
+                },
+                _saveEnvironment: function () {
+                    console.log("mark _saveEnvironment")
+                    
+
+
+//                    this.selectItem.element.save();
+                },
+
+                _save: function () {
+                    console.log("mark                 _save: function () {")
+
+
+                    this.selectItem.element.save();
+                },
+                _redo: function () {
+                    this.selectItem.element.redo();
+                },
+                _undo: function () {
+                    this.selectItem.element.undo();
+                },
+                _find: function () {
+                    this.selectItem.element.find();
+                },
+                _replace: function () {
+                    this.selectItem.element.replace();
+                },
+                _openDebug: function () {
+                    this.fire('debug-drawer', {request: 'open'});
+                },
+                _launchTarm: function () {
+                    this.fire("launch-tarm", {project:this.currentProject,container_id:this.container_id}, {node:document.body, bubbles:false});
+                },
+                changeMainContent: function () {
+                    console.log("mark 2")
+                    if(this.indexMainContant == "CodeEdit"){
+//                        this.$.radioCodeEditor.checked = (this.$.radioCodeEditor.checked ? false : true);
+                        this.fire("focus-editor", {node:document.body, bubbles:false});
+                    }
+                    else if(this.indexMainContant == "Deploy"){
+                        console.log(this.currentProject)
+                        console.log("mark 4. the above is the current project")
+                        path = "/projects/"+ this.currentProject.id + "/artifacts"
+//                        console.log("mark 5" + path)
+                        this.fire("app-router-go",path);
+
+//                        this.$.radioCloudRuntime.checked = (this.$.radioCloudRuntime.checked ? false : true);
+                    }
+//                    else if(this.indexMainContant == "Extension"){
+//                        this.$.radioExtension.checked = (this.$.radioExtension.checked ? false : true);
+//                    }
+
+                },
+
+                _openFile: function (f) {
+                    if (this._isUnInitilizedObject(f) || f.isDir) {
+                        return;
+                    }
+                    var ids = this.files.filter(function(file){
+                        return (f.containerId == file.containerId);
+                    }).map(function(file){
+                        return file.id;
+                    });
+                    var index = ids.indexOf(f.id);
+                    if (index < 0) {
+                        this.push("files", f);
+                        this.selectedTabIndex = this.files.length - 1;
+                    }
+                    else {
+                        this.selectedTabIndex = index;
+                    }
+                },
+                _removeFile: function (e, ditail) {
+                    var remveFile = ditail.file;
+                    var self = this;
+                    self.files.forEach( function (file, index) {
+                        if(remveFile.id == file.id){
+                            self.splice("files", index, 1);
+                        }
+                    })
+                },
+                _closeFile: function (e) {
+                    var self = this;
+                    var index = e.model.index;
+                    this._selectedTabIndexChange(index);
+                    self._editors[index].close( function () {
+                        self.splice("files", index, 1);
+                    });
+                    e.stopPropagation();
+                },
+                closeFiles: function (e, detail) {
+                    if (objectEmptyCheck(this.files)) {
+                        return;
+                    }
+                    var self = this;
+                    var length = this.files.length - 1;
+                    for(var i = length; i >= 0; i--) {
+                        this._spliceFiles(detail.container_id, i);
+                    }
+                    e.stopPropagation();
+                },
+                closeFilesWithDeleteDir: function (e, detail) {
+                    var self = this;
+                    var length = this.files.length - 1;
+                    var path;
+                    if (detail.isDir) {
+                        path = detail.path + '/';
+                    } else {
+                        path = detail.path;
+                    }
+
+                    for(var i = length; i >= 0; i--) {
+                        if (this.files[i].path.indexOf(path) != -1) {
+                            this._spliceFiles(detail.containerId, i);
+                        }
+                    }
+                    e.stopPropagation();
+
+                },
+                _onProjectSet: function(project){
+                    console.log(this.currentProject)
+                    console.log("mark 10")
+                    this.fire("openProject",project)
+                },
+                _closeFuncForChangeProject: function(e, detail) {
+                    console.log("mark 7")
+
+                    if (objectEmptyCheck(this.files)) {
+                        console.log("mark 8")
+
+                        return;
+                    }
+                    var self = this;
+                    var length = this.files.length - 1;
+                    for(var i = length; i >= 0; i--) {
+                        this._spliceFiles(detail.container_id, i);
+                    }
+                    this.fire("close-tabs", detail.container_id);
+                    console.log("mark 6")
+                },
+
+                _spliceFiles: function(container_id, index) {
+                    if (container_id == this.files[index].containerId) {
+                        this.splice("files", index, 1);
+                    }
+                },
+                _selectedTabIndexChange: function (index, length) {
+                    if (length < 1) {
+                        this.$.selector.select(null);
+                        this.selectedTabIndex = 0;
+                        return;
+                    }
+                    
+                    if (index < 0) {
+                        this.selectedTabIndex = 0;
+                    } else if (length <= index) {
+                        this.selectedTabIndex = length - 1;
+                    } else {
+                        this.$.selector.select(this.files[index]);
+                    }
+                
+                    console.log(this.selectItem.element);
+                },
+                _editable: function (e) {
+                    return e ? "* " : "";
+                },
+                _isIconEnable: function (currentProject, decisionElement) {
+                    if(projectNotEmptyCheck(currentProject)) {
+                        return !decisionElement;
+                    }
+                    return true;
+                },
+                _isDebugTarmIconEnable: function (currentProject) {
+                    return (!projectNotEmptyCheck(currentProject));
+                },
+                _isLoopeIconEnable: function (currentProject, selectItem) {
+                    if(projectNotEmptyCheck(currentProject)) {
+                        if (selectItem != null && selectItem.id) {
+                            return true;
+                        }
+                    }
+                    return false;
+                },
+                _isUnInitilizedObject: function (obj) {
+                    if(obj != null && obj.id){
+                        return false;
+                    }
+                    return true;
+                },
+                _fetchProjectObject: function(obj){
+                    codeApi.get("/projects/:project_id", {
+                        params: {
+                            "project_id": obj
+                        }
+                    }).then(function (data) {
+                        this.set('currentProject',data.res)
+//                        data.res.development="Hogehoge"
+                        this.currentProject=data.res;
+                        console.log(this.currentProject)
+                        this.fire('projectChanged', this.currentProject);
+                    }.bind(this));
+                },
+                _openProjectListener: function(selectedProjectEvent){
+                    this._openProject(selectedProjectEvent.detail);
+
+                },
+                _openProject: function (selectedProject) {
+
+                    if(selectedProject.id == null){
+                        selectedProject=this.currentProject;
+                    }
+
+                    this.name = selectedProject.name;
+                    this.description = selectedProject.description;
+                    this.commitButtonHidden = false;
+                    var project_id = selectedProject.id;
+//                    api.get("/context", {"origin":"http://localhost:3000","version":""}).then(function (data) {
+//                        @mocking
+                    api.get("/context",{version:""}).then(function (data) {
+                        var user_id = data.current_user.id;
+                        return codeApi.get("/projects/:project_id/container", {
+                            params: {
+                                user_id: user_id,
+                                project_id: project_id
+                            }
+                        });
+
+                    }.bind(this)).then(function (data) {
+                        selectedProject.container_id = data.res;
+                        this.container_id = selectedProject.container_id
+
+                        return codeApi.get('/containers/:container_id/path', {
+                            params: {
+                                container_id: selectedProject.container_id,
+                            }
+                        });
+
+                    }.bind(this)).then(function (data) {
+
+                        var tree = [];
+                        data.res.forEach(function (obj) {
+                            var _path = obj.Path.substr("/project".length) ;
+                            if (_path.length > 0) {
+
+                                tree.push({
+                                    name : obj.Path.substr(obj.Path.replace(/[^/]*$/, '').length),
+                                    path : _path,
+                                    containerId : selectedProject.container_id,
+                                    isDir : obj.Dir,
+                                    indent : _path.replace(/[^/]/g, '').length - 1,
+                                    opened : true,
+                                    id : selectedProject.container_id + ':' + obj.Path,
+                                });
+
+                            }
+                        }.bind(this));
+                        console.log("open project called")
+
+//                        this._selectProject(selectedProject);
+                        this.tree = tree;
+//                        this.set("tree", tree);
+
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                    })
+                }
+            });
+
+            function objectEmptyCheck(obj) {
+                if (!obj || obj.length == 0) {
+                    return true;
+                }
+                return false;
+            };
+            function projectNotEmptyCheck(project) {
+                if(project != null && Object.keys(project).length) {
+                    return true;
+                }
+                return false;
+            };
+
+
+        }());
+    </script>
+</dom-module>

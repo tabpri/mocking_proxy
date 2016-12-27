@@ -1,0 +1,58 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/elements/base-styles.html">
+
+<dom-module id="spin-box">
+    <style>
+        input[type="text"] {
+            text-align: center;
+            width: 64px;
+        }
+        .spinbutton {
+            @apply(--layout-vertical);
+            height: 28px;
+            width: 15px;
+            background-color: #cccccc;
+        }
+        .spinbutton > ajax-img {
+            height: 10px;
+            width: 15px;
+            color: white;
+            font-size: 8px;
+            text-align: center;
+        }
+        .dicrease {
+            top: 8px;
+        }
+    </style>
+    <template>
+        <input type="text" pattern="[0-9]+" value="[[value]]" on-input="_onInput">
+        <div class="spinbutton">
+            <ajax-img class="increase" src="/static/img/icn-arrow4_up.svg" on-tap="_increaseValue"></ajax-img>
+            <ajax-img class="dicrease" src="/static/img/icn-arrow4_down.svg" on-tap="_dicreaseValue"></ajax-img>
+        </div>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                is: "spin-box",
+                properties: {
+                    value: {
+                        type: Number,
+                        notify: true
+                    },
+                },
+                _increaseValue: function(val) {
+                    this.value = Math.min(this.value + this.step, this.max);
+                },
+                _dicreaseValue: function(val) {
+                    this.value = Math.max(this.value - this.step, this.min);
+                },
+                _onInput: function(e) {
+                    if (e.target.validity.valid) {
+                        this.value = Math.min(Math.max(Number(e.target.value), this.min), this.max);
+                    }
+                }
+            });
+        }());
+    </script>
+</dom-module>

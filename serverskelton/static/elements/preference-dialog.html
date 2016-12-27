@@ -1,0 +1,262 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/common/common-dialog.html">
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/common/working-dialog.html">
+<link rel="import" href="/static/elements/common/message-dialog.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/panel-box.html">
+<link rel="import" href="/static/elements/common/check-box.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<link rel="import" href="/static/elements/base-styles.html">
+<dom-module id="preference-dialog">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            
+            .preference-dialog {
+                --base-dialog-body: {
+                    padding: 0px;
+                }
+            }
+            
+            .tab-buttons {
+                @apply(--layout-horizontal);
+                background-color: var(--code-color-background-gray);
+                color: var(--code-color-font-black);
+            }
+            
+            .tab-button {
+                padding: 0px 10px 0px 10px;
+                box-sizing: border-box;
+                height: 30px;
+                line-height: 30px;
+                border-right: solid 1px var(--code-color-border-black);
+                border-bottom: 1px solid var(--code-color-border-black);
+            }
+            
+            .tab-button.iron-selected {
+                background-color: var(--code-color-background-light-gray);
+                color: var(--code-color-font-black);
+                border-bottom: none;
+            }
+            
+            .tab-button:last-child {
+                border-right: none;
+            }
+            
+            .tab-button.blank {
+                @apply(--layout-flex);
+                pointer-events: none;
+            }
+            
+            .tab-panel {
+                background-color: var(--code-color-background-light-gray);
+                padding: 10px 20px 10px 20px;
+            }
+
+            .p_title {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+                font-size: 14px;
+                height: 28px;
+                line-height: 28px;
+                @apply(--panel-box-title-style);
+            }
+            
+            panel-box.image-list {
+                --panel-box-body-style: {
+                    height: 272px;
+                    overflow: auto;
+                }
+            }
+            
+            .image-buttons {
+                margin-top: 10px;
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+            }
+            
+            .horizontal {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            
+
+            flex-label {
+                --flex-label-line-height: 30px;
+            }
+
+            check-box {
+                margin-right: 10px;
+            }
+            
+            [hide] {
+                visibility: hidden;
+            }
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <delete-dialog id="deleteDialog"></delete-dialog>
+        <message-dialog id="messageDialog" mode="[[messageDialogType]]">[[messageDialogText]]</message-dialog>
+        <working-dialog id="workingDialog">[[workingDialogMessage]]</working-dialog>
+        
+        <common-dialog id="preferenceDialog" class="preference-dialog">
+            <div class="dialog-title">preference</div>
+            <div class="dialog-body">
+
+                <iron-selector class="tab-buttons" selected="{{selectedTabId}}">
+                    <div class="tab-button">{{resource.base_image}} {{resource.list}}</div>
+                    <div class="tab-button blank"></div>
+                </iron-selector>
+                <iron-pages class="tab-panel" selected="{{selectedTabId}}">
+                        <panel-box class="main_panel image-list">
+                            <div class="p_title">
+                                <check-box checked="{{_allCheck::change}}"></check-box>
+                                {{resource.base_image}} {{resource.list}}
+                            </div>
+                            <div class="p_body">
+                                <template is="dom-repeat" items="{{_projectImageList}}">
+                                    <label class="horizontal cursor-pointer">
+                                        <check-box type="checkbox" checked="{{item.checked::change}}"  hide$="{{_isDefaultImage(item.project_id)}}"></check-box>
+                                        <flex-label>[[item.tag]]</flex-label>
+                                    </label>
+                                </template>
+                                <div class="image-buttons">
+                                    <common-button size="B" type="delete" on-tap="_deleteBaseImages" disabled$="{{!_checkArtifactEnabled(_projectImageList.*)}}">{{resource.delete}}</common-button>
+                                </div>
+                            </div>
+                        </panel-box>
+                    <panel-box class="main_panel">
+                        <div class="p_title">fonts</div>
+                        <div class="p_body">
+                        </div>
+                    </panel-box>
+                </iron-pages>
+            </div>
+        </common-dialog>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "preference-dialog",
+                properties: {
+                    selectedTabId: {
+                        type: Number,
+                        notify: true,
+                    },
+                    _allCheck: {
+                        type: Boolean,
+                        observer: "_setCheck",
+                        notify: true,
+                    },
+                },
+                show: function () {
+                    var self = this;
+                    this._getBaseImages().then(function (data) {
+                        self.$.preferenceDialog.open();
+                    }).catch(function (e) {
+                        console.log(e);
+                    });
+                },
+                _getBaseImages: function () {
+                    var self = this;
+                    return new Promise(function(resolve, reject) {
+                        codeApi.get("/base_images").then(function (data) {
+                            self._projectImageList = data.res;
+                            resolve();
+                        }).catch(function (e) {
+                            reject(e);
+                        });
+                    });
+                },
+                _setCheck: function (value) {
+                    var self = this;
+                    this._projectImageList.forEach(function (image, index) {
+                        if(self._isDefaultImage(image.project_id)){
+                            self.set(["_projectImageList",index,"checked"], false);
+                        } else {
+                            self.set(["_projectImageList",index,"checked"], value);
+                        }
+                    });
+                },
+                _deleteBaseImage: function (imageId) {
+                    return new Promise(function(resolve, reject) {
+                        codeApi.delete("base_images/:image_id", {
+                            params: {
+                                image_id: imageId,
+                            },
+                        }).then(function () {
+                            resolve(imageId)
+                        }).catch(function (e) {
+                            reject(e);
+                        });
+                    });
+                    
+                },
+                _deleteBaseImages: function () {
+                    var self = this;
+                    this.$.deleteDialog.show(
+                        function () {
+                            self.workingDialogMessage = this.resource.please_wait;
+                            self.$.workingDialog.toggle();
+
+                            var promises = [];
+                            self._projectImageList.forEach(function (image) {
+                                
+                                if(image.checked && !self._isDefaultImage(image.project_id)){
+                                    promises.push(
+                                        self._deleteBaseImage(image.id)
+                                    );
+                                }
+                            });
+
+                            Promise.all(promises).then(function (result) {
+                                return codeApi.get("/base_images");
+                            }).then(function (data) {
+                                console.log(data);
+                                self.$.deleteDialog.close();
+                                self._projectImageList = data.res;
+                                self.messageDialogType = "Success";
+                                self.messageDialogText = self.resource.succeessfully_deleted;
+                                self.$.messageDialog.show();
+                            }).catch(function (e) {
+                                console.log(e);
+                                self.$.deleteDialog.close();
+                                self.messageDialogType = "Error";
+                                self.messageDialogText = self.resource.failed_to_create;
+                                self.$.messageDialog.show();
+                            }).then(function () {
+                                self.$.workingDialog.toggle();
+                            });
+                        },
+                        function () {                        // Cancel
+                            self.$.deleteDialog.close();
+                        }
+                    );
+                },
+                _isDefaultImage: function (projectId) {
+                    if(projectId == "default"){
+                        return true;
+                    }
+                    return false;
+                },
+                _checkArtifactEnabled: function (items) {
+                    if(!items.base){
+                        return false;
+                    }
+                    var rtn = false;
+                    items.base.forEach(function(item){
+                        if(item.checked){
+                            rtn = true;
+                        }
+                    });
+                    return rtn;
+                },
+            });
+        }());
+    </script>
+</dom-module>

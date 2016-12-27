@@ -1,0 +1,38 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/app/ui/object-table/table-common.html">
+<link rel="import" href="/static/app/ui/object-table/column-header.html">
+<link rel="import" href="localize-behavior.html">
+
+<dom-module id="localize-text-column">
+    <style include="table-column-style">
+        .value {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    </style>
+
+    <template>
+        <column-header class="header" table="{{_table}}" label="{{label}}" order-by="{{orderBy}}"></column-header>
+        <div id="rows" scroll-top="[[_table.scrollTop]]">
+            <template id="repeater" is="dom-repeat" items="{{_table.items}}" sort="{{_table.sort}}" filter="{{_table.filter}}">
+                <div class="row" status$="[[_status(_table.rowStatus.*, item.*)]]">
+                    <div class="value">{{_localize(item.*, path, localize)}}</div>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'localize-text-column',
+
+            behaviors: [ListTable.ColumnBehavior, LocalizeBehavior],
+
+            _localize: function(itemInfo, path, localize) {
+                var val = localize(itemInfo.base, path);
+                return (val == null) ? '' : val;
+            }
+        });
+    </script>
+</dom-module>

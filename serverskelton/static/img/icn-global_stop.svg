@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <style>
+      .\39 86de319-e716-4542-81f9-1466b96edbf6 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>icn-global_stop</title>
+  <g id="5e551e42-7e11-49bd-bab2-48ec21a48cfc" data-name="レイヤー 2">
+    <g id="abdd1acb-19a3-4324-b025-c9871ba18b06" data-name="レイヤー 1">
+      <g id="d691f8a0-fee6-4219-9cb2-041ca26f6657" data-name="グローバルアイコン">
+        <g id="d1bca15f-8c5c-4f60-a42a-ff90d04032eb" data-name="icn-global_stop">
+          <path d="M220,31H80L10,151.5,80,272H220l70-120.5ZM209.3,255H90.7L31.4,151.5,90.7,48H209.3l59.3,103.5ZM205,110l-40.14,40.14L205,190.29h0a10.14,10.14,0,1,1-14.34,14.34h0l-40.14-40.14-40.14,40.14h0a10.14,10.14,0,0,1-14.34-14.34h0l40.14-40.14L96.07,110h0a10.14,10.14,0,1,1,14.34-14.34h0l40.14,40.14,40.14-40.14h0A10.14,10.14,0,0,1,205,110Z"/>
+          <rect class="986de319-e716-4542-81f9-1466b96edbf6" width="300" height="300"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

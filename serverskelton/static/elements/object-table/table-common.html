@@ -1,0 +1,250 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<dom-module id="table-column-style">
+    <style>
+        :host {
+            flex: 0 1 10000px;
+/*            @apply(--layout-flex-none);*/
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            @apply(--layout-horizontal);
+            @apply(--layout-center-center);
+            position: relative;
+            height: 30px;
+            padding: 0 5px;
+            font-size: 10px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        #rows {
+            overflow: hidden;
+            height: calc(100% - 30px);
+        }
+
+        .row {
+            @apply(--layout-horizontal);
+            @apply(--layout-center-center);
+            position: relative;
+            height: 34px;
+            padding: 0 5px;
+            color: #333;
+            font-size: 12px;
+        }
+
+        .row + .row {
+            margin-top: 1px;
+        }
+
+        :host([current]) .row {
+            background-color: #f2f2f2;
+        }
+
+        .row[status~="selected"] {
+            color: #fff;
+        }
+
+        .row[status~="selected"],
+        .row[status~="sub-selected"] {
+            background-color: transparent !important;
+        }
+
+        :host([align="left"]) .row {
+            @apply(--layout-start-justified);
+        }
+
+        :host([align="right"]) .row {
+            @apply(--layout-end-justified);
+        }
+    </style>
+</dom-module>
+
+<script>
+(function() {
+
+    function prop(item, path) {
+        if (path) {
+            var arr = path.split('.');
+            for (var i=0, len=arr.length; i<len && item; i++) {
+                item = item[arr[i]];
+            }
+        }
+        return item;
+    }
+
+    var BaseBehavior = {
+
+        _status: function(rowInfo, itemInfo) {
+            var row = rowInfo && rowInfo.base || {};
+            var item = itemInfo && itemInfo.base || {};
+            var status = [];
+
+            if (row.selected && row.selected == prop(item, row.pathForSelected)) {
+                status.push('selected');
+            }
+
+            if (row.pathForSubSelected && prop(item, row.pathForSubSelected)) {
+                status.push('sub-selected');
+            }
+
+            return status.join(' ');
+        },
+
+        _value: function(itemInfo, path, str) {
+            var val = path ? prop(itemInfo.base, path) : '';
+            if (str === undefined) {
+                return val;
+            }
+            if (val == null || str == null) {
+                return '';
+            }
+            var tmpItem = window.item;
+            var tmpValue = window.value;
+            window.item = itemInfo.base;
+            window.value = val;
+            var geval = eval;
+            var ret = decodeURI(str).replace(/\{(.*?)\}/g, function(all, str) {
+                return geval(str);
+            });
+            window.value = tmpValue;
+            window.item = tmpItem;
+            return ret;
+        },
+
+        _eq: function(a, b) {
+            return a == b;
+        },
+
+        _cancelEvent: function(e) {
+            e.preventDefault();
+        }
+    };
+
+    var ColumnBehavior = [BaseBehavior, {
+        properties: {
+            _table: Object,
+            label: String,
+            order: {
+                type: String,
+                value: null
+            },
+            path: {
+                type: String,
+                value: ''
+            },
+            align: {
+                type: String,
+                value: 'center',
+                reflectToAttribute: true
+            },
+            current: {
+                type: Boolean,
+                value: false,
+                reflectToAttribute: true
+            },
+            flex: {
+                type: String,
+                observer: '_flexChanged'
+            },
+            sort: {
+                type: Function,
+                value: null
+            }
+        },
+
+        listeners: {
+            'rows.scroll': '_cancelEvent'
+        },
+
+        observers: [
+            '_orderChanged(order, path, sort, _table.order, _table.dir, _table.manualSort)',
+            '_itemsChanged(_table.items.*, path)'
+        ],
+
+        _orderChanged: function(order, path, sort, tableOrder, tableDir, manualSort) {
+            this.debounce('_orderChanged', function() {
+                if (order && order == tableOrder) {
+                    this.current = true;
+                    var me = this;
+
+                    if (manualSort) {
+                        this.set('_table.sort', null);
+                        return;
+                    }
+
+                    if (typeof sort == 'string') {
+                        sort = this.domHost[sort];
+                        if (sort instanceof Function) {
+                            sort = sort.bind(this.domHost);
+                        }
+                    }
+
+                    sort = sort || function(a, b) {
+                        if (typeof a == 'string' && typeof b == 'string') {
+                            a = a.toLowerCase();
+                            b = b.toLowerCase();
+                        }
+                        return a > b ? 1 : a < b ? -1 : 0;
+                    };
+
+                    this.set('_table.sort', function(a, b) {
+                        var dir = (tableDir == 'desc') ? -1 : 1;
+                        var val = sort(prop(a, path), prop(b, path));
+                        if (val == 0) {
+                            var items = me.get('_table.items') || [];
+                            val = items.indexOf(a) - items.indexOf(b);
+                        } 
+                        return val * dir;
+                    });
+                }
+                else {
+                    this.current = false;
+                }
+            }, 1);
+        },
+
+        _flexChanged: function(flex) {
+            var style = null;
+            if (flex == 'min') {
+                style = '0 1 auto';
+            }
+            else if (flex == '') {
+                style = '0 1 auto';
+            }
+            else if (flex != null) {
+                style = flex;
+            }
+            this.style.MsFlex = style;
+            this.style.WebkitFlex = style;
+            this.style.flex = style;
+        },
+
+        _itemsChanged: function(itemsInfo, path) {
+            if (itemsInfo) {
+                if (path && itemsInfo.path.split('.').slice(3).join('.') == path) {
+                    this.fire('table-render', {}, {bubbles: false});
+                }
+            }
+        },
+
+        _render: function() {
+            this.$.repeater.render();
+        }
+
+    }];
+
+    window.ListTable = {
+        prop: prop,
+        BaseBehavior: BaseBehavior,
+        ColumnBehavior: ColumnBehavior
+    };
+
+}());
+
+</script>

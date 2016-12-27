@@ -1,0 +1,187 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="/static/bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="/static/bower_components/paper-input/paper-input.html">
+<link rel="import" href="/static/bower_components/paper-button/paper-button.html">
+<link rel="import" href="/static/bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/elements/base-styles.html">
+<dom-module id="task-runner">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            .listItem {
+                @apply(--layout-horizontal);
+            }
+
+            .listItem label {
+                @apply(--layout-flex);
+                @apply(--layout-horizontal);
+                height: 100%;
+            }
+            
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <delete-dialog id="deleteDialog"></delete-dialog>
+        
+        <paper-dialog modal id="editTask">
+            <h2>{{resource.update_task}}</h2>
+            <paper-dialog-scrollable>
+                <paper-input value="{{updateCmd}}" label="command"></paper-input>
+            </paper-dialog-scrollable>
+            <div class="buttons">
+                <paper-button dialog-dismiss>{{resource.cancel}}</paper-button>
+                <paper-button dialog-confirm on-click="updateTask" disabled="{{!checkAnd(updateCmd)}}">{{resource.ok}}</paper-button>
+            </div>
+        </paper-dialog>
+        <paper-dialog modal id="createTask">
+            <h2>Create Task</h2>
+            <paper-dialog-scrollable>
+                <paper-input value="{{createCmd}}" label="command"></paper-input>
+            </paper-dialog-scrollable>
+            <div class="buttons">
+                <paper-button dialog-dismiss>{{resource.cancel}}</paper-button>
+                <paper-button dialog-confirm on-click="createTask" disabled="{{!checkAnd(createCmd)}}">{{resource.ok}}</paper-button>
+            </div>
+        </paper-dialog>
+        
+        <div>
+            <iron-icon icon="icons:add-box" on-click="showCreateTask"></iron-icon>
+        </div>
+        <div class="scroll-vertical">
+            <template is="dom-repeat" items="{{tasks}}" sort="sortTasks">
+                <div class="block">
+                    <div class="listItem">
+                        <label>
+                            <iron-icon icon="av:play-arrow" on-click="runCommand"></iron-icon>
+                            <flex-label>{{item.cmd}}</flex-label>
+                        </label>
+                        <iron-icon id=[[item.id]] icon="editor:mode-edit" on-click="showEditTask"></iron-icon>
+                        <iron-icon icon="icons:delete" on-click="showDeleteDialog"></iron-icon>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "task-runner",
+                properties: {
+                    tasks: {
+                        type: Object,
+                        notify: true,
+                    },
+                    container: {
+                        type: Object,
+                        notify: true,
+                        observer: "setTaskList",
+                    },
+                    task: {
+                        type: Object,
+                        notify: true,
+                    }
+                },
+                checkAnd: function(){
+                    for(i = 0; i < arguments.length; i++){
+                        if(!arguments[i]){
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                setTaskList: function () {
+                    if (typeof this.container != "object"){
+                        return;
+                    }
+                    codeApi.get("/projects/:project_id/tasks", {
+                        params: {
+                            project_id: this.container.project_id,
+                        }
+                    }).then(function (data) {
+                        console.log(data);
+                        this.tasks = data.res;
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                    }.bind(this));
+                },
+                showEditTask: function (e) {
+                    this._task_id = e.model.item.id;
+                    this.updateCmd = e.model.item.cmd;
+                    this._updateIndex = this.tasks.indexOf(e.model.item);
+                    this.$.editTask.open();
+                },
+                updateTask: function (e) {
+                    codeApi.patch("/projects/:project_id/tasks/:task_id", {
+                        params: {
+                            project_id: this.container.project_id,
+                            task_id: this._task_id,
+                        },
+                        body: {
+                            cmd: this.updateCmd,
+                            project_id: this.container.project_id,
+                        }
+                    }).then(function (data) {
+                        this.set("tasks." + this._updateIndex + ".cmd", this.updateCmd);
+                    }.bind(this)).catch(function (e) {
+
+                    });
+                },
+                showCreateTask: function (e) {
+                    this.createCmd = "";
+                    this.$.createTask.resetFit()
+                    this.$.createTask.toggle();
+                },
+                createTask: function (e) {
+                    codeApi.post("/projects/:project_id/tasks", {
+                        params: {
+                            project_id: this.container.project_id,
+                        },
+                        body: {
+                            cmd: this.createCmd,
+                            project_id: this.container.project_id,
+                        }
+                    }).then(function (data) {
+                        this.push("tasks", data.res);
+                    }.bind(this)).catch(function (e) {
+                        console.log(e);
+                    }.bind(this));
+                },
+                showDeleteDialog: function (e) {
+                    var self = this;
+                    this.$.deleteDialog.show(function () {
+                        var index = self.tasks.indexOf(e.model.item);
+                        codeApi.delete("/projects/:project_id/tasks/:task_id", {
+                            params: {
+                                project_id: self.container.project_id,
+                                task_id: e.model.item.id,
+                            }
+                        }).then(function (data) {
+                            self.splice("tasks", index, 1);
+                        }.bind(this)).catch(function (e) {
+                        });
+                    });
+                },
+                runCommand: function (e) {
+                    this.fire("run-task", {
+                        container: this.container,
+                        task: e.model.item,
+                    }, {node:document.body, bubbles:false});
+                },
+                sortTasks: function(a,b) {
+                    var aLow = a.cmd.toLowerCase();
+                    var bLow = b.cmd.toLowerCase();
+                    if( aLow < bLow ) return -1;
+                    if( aLow > bLow ) return 1;
+                    return 0;
+                },
+            });
+
+        }());
+    </script>
+</dom-module>

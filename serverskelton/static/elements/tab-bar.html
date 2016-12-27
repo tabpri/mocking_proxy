@@ -1,0 +1,86 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/pushstate-anchor/pushstate-anchor.html">
+
+<link rel="import" href="/static/css/app-styles.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="tab-bar">
+    <template>
+        <style include="app-styles"></style>
+        <style>
+            :host {
+                @apply(--layout-horizontal);
+                background-color: #fcf2d9;
+                color: var(--color-bg-color-light-gray);
+                height: 40px;
+            }
+
+            .tabArea {
+                @apply(--layout-horizontal);
+            }
+
+            .controlArea {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+                margin-left: auto;
+                margin-right: var(--size-main-contents-margin);
+            }
+
+            .tab {
+                margin: 13px 0px 0px 5px;
+                background-color: var(--color-bg-color-gray);
+                padding: 0px 10px;
+                height: 27px;
+                border-top-right-radius: 5px;
+                border-top-left-radius: 5px;
+                text-align: center;
+                position: relative;
+            }
+
+            .tab:first-child {
+                margin: 13px 0px 0px 10px;
+            }
+
+            .tab[selected] {
+                margin: 10px 0px 0px 5px;
+                height: 30px;
+                background-color: var(--color-bg-color-black);
+                cursor: default;
+            }
+            
+            a {
+                line-height: 30px;
+                display: block;
+                height: 100%;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                cursor: pointer;
+            }
+            
+        </style>
+
+        <div class="tabArea">
+            <template is="dom-repeat" items="{{tabs}}">
+                <div class="tab" selected$="{{item.selected}}">
+                    <a is="pushstate-anchor" href="{{item.link}}">{{item.name}}</a>
+                </div>
+            </template>
+        </div>
+
+        <div class="controlArea" selected$="{{item.selected}}">
+            <content></content>
+        </div>
+
+    </template>
+
+    <script>
+        (function() {
+            Polymer({
+                is: "tab-bar",
+                properties: {
+                },
+            });
+        }());
+    </script>
+</dom-module>

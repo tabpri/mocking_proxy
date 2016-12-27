@@ -1,0 +1,70 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<!--<link rel="import" href="ajax-img.html">-->
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+<link rel="import" href="/static/elements/base-styles.html">
+
+<dom-module id="check-box">
+<template>
+    <style include="base-styles"></style>
+    <style>
+        :host {
+            display: inline-block;
+            position: relative;
+            height: 16px;
+            width: 16px;
+        }
+
+        label {
+            @apply(--layout-fit);
+            cursor: pointer;
+        }
+
+        .checkbox {
+            @apply(--layout-fit);
+/*
+            width: auto;
+            height: auto;
+*/
+        }
+
+        :host([checked]) .checkbox.off {
+            display: none;
+        }
+
+        :host(:not([checked])) .checkbox.on {
+            display: none;
+        }
+    </style>
+    
+    <label>
+        <input type="checkbox" checked="{{checked::change}}" on-change="_change" hidden>
+        <ajax-img class="checkbox on icon-s" src="/static/img/icn-global_check-on.svg"></ajax-img>
+        <ajax-img class="checkbox off icon-s" src="/static/img/icn-global_check-off.svg"></ajax-img>
+    </label>
+</template>
+
+<script>
+(function() {
+
+    Polymer({
+        is: 'check-box',
+
+        properties: {
+            checked: {
+                type: Boolean,
+                notify: true,
+                reflectToAttribute: true
+            }
+        },
+
+        _change: function() {
+            this.fire('change', {}, {bubbles: false, cancelable:false});
+        }
+    });
+
+}());
+</script>
+
+</dom-module>

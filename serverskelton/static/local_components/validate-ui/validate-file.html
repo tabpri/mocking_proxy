@@ -1,0 +1,152 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/static/app/ui/common/ajax-img.html">
+<link rel="import" href="validate-rules.html">
+
+<dom-module id="validate-file">
+    <template>
+        <style>
+            ::host {
+                position: relative;
+                width: 100%;
+            }
+
+            .uploadButton {
+                @apply(--layout-horizontal);
+                font-size: 12px;
+                height: 24px;
+                line-height: 24px;
+            }
+
+            label {
+                display: block;
+                width: 70px;
+                padding: 0 10px;
+                text-align: center;
+                background-color: var(--btn-color-bg-color-ok);
+                color: var(--color-font-white);
+                cursor: pointer;
+            }
+
+            .targetName {
+                margin-left: 10px;
+            }
+
+            .title {
+                margin-bottom: 5px;
+            }
+            
+            .inputArea {
+                height: 26px;
+                padding: 0px 5px;
+                background-color: white;
+                border: solid 1px var(--color-border);
+            }
+            
+            input {
+                position: relative;
+                width: 100%;
+                height: 24px;
+                border: none;
+                outline: 0;
+                background-color: transparent;
+            }
+
+            .messages {
+                margin-bottom: 5px;
+            }
+
+            .notice {
+                color: #ea505c;
+                margin-left: 5px;
+            }
+
+            .required {
+                width: 6px;
+                height: 16px;
+                color: #ea505c;
+            }
+
+            .messages > div:nth-last-of-type(1) {
+                margin-bottom: 5px;
+            }
+
+        </style>
+
+        <div class="title">
+            {{title}}
+            <template is="dom-if" if="{{required}}">
+                <ajax-img class="required" src="/static/app/img/icn-global_required.svg"></ajax-img>
+            </template>
+        </div>
+        <div class="uploadButton">
+            <label for="uploader">{{buttonName}}
+                <input is="validate-rules" type="file" id="uploader" error-messages="{{errorMessages}}" value="{{value}}" title="{{title}}" 
+                    invalids="{{invalids}}" valid-type="{{validType}}" on-change="_change" style="display:none;" accept="{{accept}}">
+            </label>
+            <div class="targetName">{{filename}}</div>
+        </div>
+        <div class="messages">
+            <template is="dom-repeat" items="{{errorMessages}}">
+                <div class="notice">{{item}}</div>
+            </template>
+        </div>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "validate-file",
+                properties: {
+                    validType: {
+                        type: String,
+                    },
+                    buttonName: {
+                        type: String,
+                    },
+                    fileChangeCallback: {
+                        type: Function
+                    },
+                    accept: {
+                        type: String,
+                    },
+                    filename: {
+                        type: String
+                    },
+                    value: {
+                        type: String,
+                        notify: true,
+                    },
+                    invalids: {
+                        type: Array,
+                        notify: true,
+                    },
+                    errorMessages: {
+                        notify: true,
+                        type: Array,
+                        value: function () { return [];},
+                    },
+                    required: {
+                        type: Boolean,
+                        value: false,
+                    }
+                },
+                // JavaScript上で設定された値をバリデーション対象とする
+                validate: function(value) {
+                    this.$.uploader.validate(value);
+                },
+                clear: function() {
+                    this.$.uploader.clear();
+                    // this.value = null;
+                    this.$.uploader.value="";
+                    this.filename="Not selected";
+                },
+                _change: function(e) {
+                    if (typeof this.fileChangeCallback == 'function') {
+                        this.fileChangeCallback(e);
+                    }
+                }
+            });
+        }());
+    </script>
+</dom-module>

@@ -1,0 +1,241 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="display-info-input.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<!--
+
+## usage and param
+path:the app-route
+scope: you can ommit. use this if you have more than two-route.
+    example: scope:code makes you
+
+-->
+<dom-module id="display-infos-input">
+    <template>
+        <i18n-data value="{{resource}}" id="i18n"></i18n-data>
+        <i18n-data value="{{locales}}" path="locales/index-{locale}.json"></i18n-data>
+
+
+        <style>
+
+            .dropdown-trigger {
+                border: 1px solid var(--color-border);
+                color: var(--color-font-gray);
+            }
+
+            .localeLabel {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+
+            .localeLabel .localeName{
+                @apply(--layout-flex);
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                margin-left: 5px;
+            }
+
+            flex-label {
+                --flex-label-height: 26px;
+                --flex-label-line-height: 26px;
+                margin-left: 5px;
+            }
+
+            #addButton {
+                margin: 10px 0px;
+            }
+
+            /*.body {*/
+            /*@apply(--layout-vertical);*/
+            /*@apply(--layout-center-justified);*/
+            /*@apply(--layout-flex-auto);*/
+            /*}*/
+        </style>
+        <template is="dom-repeat" items="[[displayInfos]]" >
+            <display-info-input id="display_info_inputs" display-info="[[item]]" invalid="[[invalid]]" isEditMode="[[isEditMode]]">
+                <common-button class="body-bottom" size="A" language_tag="{{item.language_tag}}" type="accept" on-tap="_pop" disabled$={{hasOnlyOne}}>{{resource.delete}}</common-button>
+            </display-info-input>
+        </template>
+        <drop-down class="localeDropdown" vertical-align="top" horizontal-align="left">
+            <div class="dropdown-trigger localeLabel cursor-pointer">
+                <flex-label>{{_selectedLocale.localeKey}}</flex-label>
+                <ajax-img class="arrow" src="/static/app/img/icn-arrow4_down.svg"></ajax-img>
+            </div>
+            <div class="dropdown-content">
+                <template is="dom-repeat" items="{{_locales}}" >
+                    <div class="localeLabel cursor-pointer" on-tap="_selectLocale">
+                        <div class="localeName">{{item.localeKey}}</div>
+                    </div>
+                </template>
+            </div>
+        </drop-down>
+
+        <common-button size="A" id="addButton" type="accept" on-tap="_add" disabled$={{isLocalAlreadyGenerated(_selectedLocale)}}>{{resource.add}}</common-button>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                is: "display-infos-input",
+                properties: {
+                    displayInfos: {
+                        type: Array,
+                        notify: true
+                    },
+                    _locales: {
+                        type: Array,
+                        notify: true
+                    },
+                    _selectedLocale: {
+                        type: Object,
+                        notify: true
+                    },
+                    displayattributes: {
+                        type: Array,
+                        notify: true
+                    },hasOnlyOne: {
+                        type: Boolean,
+                        notify: true
+                    },isEditMode: {
+                        type: Boolean,
+                        notify: true
+                    },resource: {
+                        type: Array,
+                        notify: true,
+                    },invalid: {
+                        type: Boolean,
+                        notify: true
+                    },
+                },
+                _pop: function(e){
+                    displayInfo = e.model.item
+                    var index = this.displayInfos.indexOf(displayInfo);
+                    this.splice('displayInfos', index, 1);
+                    this.checkHasOnlyOne()
+                },
+                checkHasOnlyOne: function(){
+                    this.hasOnlyOne =  (this.displayInfos != undefined && this.displayInfos.length==1)
+                },
+                removeAll: function(){
+                    if(this.displayInfos==undefined){
+                        return
+                    }
+                    this.splice('displayInfos',0,100)
+
+                },
+                setDisplayInfo: function(displayInfos){
+                    this.removeAll()
+
+                    console.log("mark objectChanged")
+                    console.log(this.object)
+                    console.log(this.attr)
+                    displayInfos.forEach(function(displayInfo){
+                        if(displayInfo["image_url"]!=undefined){
+                            displayInfo.image = null
+                            console.log("mark this.attr.name is image")
+                            console.log(this.object)
+                            delete displayInfo.image_url
+                        }
+                    })
+
+                    this.set("displayInfos",displayInfos)
+                    console.log("mark this.displayInfos")
+                    console.log(this.displayInfos)
+
+                },
+                attached: function () {
+                    this.fetchLocales()
+                    this.isSelectedLocalAlreadyGenerated = true
+                    this.pushWithLanguageTag(I18n.language);
+                },
+                _add: function(){
+                    if (!this._selectedLocale) {
+                        return;
+                    }
+                    this.pushWithLanguageTag(this._selectedLocale.localeKey)
+                    this.$.addButton.disabled=true;
+                    this.checkHasOnlyOne()
+                },
+                isLocalAlreadyGenerated: function(locale){
+                    if(this.displayInfos===undefined){
+                        return false;
+                    }
+                    flag = false;
+                    this.displayInfos.forEach(function(display_info){
+                        if(display_info.language_tag == locale.localeKey){
+                            flag = true;f
+                        }
+                    })
+                    return flag;
+                },
+                _selectLocale: function(e){
+                    this._selectedLocale = e.model.item;
+                },
+                pushWithLanguageTag: function(language_tag){
+                    if(this.displayInfos===null || this.displayInfos === undefined || this.displayInfos.length == 0){
+                        this.displayInfos = new Array()
+                    }
+                    display_info = {
+                        "language_tag":language_tag,
+                        invalid:true
+
+                    }
+                    this.displayattributes = this.displayattributes.length==0?["name","description"]:this.displayattributes;
+                    this.displayattributes.forEach(function(attribute){
+                        display_info[attribute] = ""
+                        // here the prepopulation shoudl be @todo
+                    })
+                    this.push("displayInfos",display_info)
+                    // TODO: displayInfosのobserverとしたい
+                    this.checkHasOnlyOne()
+                },
+                getModel: function(){
+                    console.log("mark getModel")
+                    console.log(this.displayInfos)
+                    this.displayInfos.forEach(function(displayInfo){
+                        console.log("challenging mark displayInfo.image==null")
+
+                        if(displayInfo.image==null){
+                            console.log("mark displayInfo.image==null")
+                            delete displayInfo.image
+                        }
+                    })
+
+                    console.log("mark this.displayInfos")
+                    console.log(this.displayInfos)
+
+                    return this.displayInfos;
+                },
+                fetchLocales: function(){
+
+                    self=this
+                  localeObjects = []
+                  this.$.i18n._locales.forEach(function(locale){
+                      localeObject = {
+                          localeKey:locale
+                      }
+                      localeObjects.push(localeObject)
+//                        self.push("_locales",localeObject)
+                      console.log(localeObject)
+                  })
+                    this.set("_locales",localeObjects);
+                },
+                isInvalid: function(){
+                    var children =  document.querySelectorAll('display-info-input')
+                    var anyInvalids = false;
+                    children.forEach(function(displayInfo){
+                        anyInvalids = (displayInfo.isInvalid()||anyInvalids)
+                    })
+                    return anyInvalids
+                },
+                clear: function () {
+                    this.displayInfos.forEach(function(displayInfo){
+                        displayInfo.attr.forEach(function(attribute){
+                            attribute.value = null;
+                        });
+                    });
+                }
+            });
+        }());
+    </script>
+</dom-module>

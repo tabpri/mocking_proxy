@@ -1,0 +1,55 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+
+<script src="/static/bower_components/axios/dist/axios.min.js"></script>
+<link rel="import" href="/static/app-sdk/app-sdk.html">
+<link rel="import" href="/static/elements/config.html">
+<link rel="import" href="/static/elements/constant-define.html">
+<link rel="import" href="/static/elements/main-viewer.html">
+<link rel="import" href="/static/bower_components/app-router/app-router.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+
+<link rel="import" href="/static/elements/base-styles.html">
+
+<dom-module id="iot-code">
+    <template>
+        <style include="base-styles"></style>
+        <style>
+            :host {
+                @apply(--layout-fit);
+                @apply(--layout-horizontal);
+                background-color: var(--code-color-background);
+                color: var(--code-color-font-white);
+            }
+        </style>
+
+        <main-viewer></main-viewer>
+
+    </template>
+
+    <script>
+        var api = new CIOS.API();
+
+        var codeApi = new CIOS.API({
+            baseUrl: config.codeApiUrl,
+        });
+
+        (function () {
+
+            Polymer({
+                is: "iot-code",
+            });
+
+            axios('/oauth2/token').then(function (res) {
+                CIOS.init({
+                    api:{
+                        token:res.data
+                    },
+                    enableLanguages:["ja","en"]
+                });
+            });
+
+//            origins: config.origins,
+        }());
+    </script>
+</dom-module>

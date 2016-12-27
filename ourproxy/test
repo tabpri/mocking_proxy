@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+
+require('shelljs/global')
+
+exec("curl localhost")
+exec('curl localhost/kernel/')
+exec('curl -X GET -H "Authorization: Bearer Gqtlaxd6DJcxlSYIrQM3vOpqRN5xVMefrv7g7NpWLIITomhmkDfpafmFgpOwVDv1Rw1YMlCZYqCC0iB7Eq52RGGcoT3lBmgQiYwqtnvKMSezBGJUngtwFPnFGFUv7Uc4ltgygSh5L4lAwP9Lcrbkn4Zg2lAo6LyRwEE6jaqoXLaymbbzsel2mzT4bNB4XQZROO4uAgILWWXRLq5llAC5TeQSlKZEyg6PyCUdP4sAChfAxnzDMrYR2owtvObQSEV0" -H "Cache-Control: no-cache"  "http://localhost/kernel/dev/lambdas"')

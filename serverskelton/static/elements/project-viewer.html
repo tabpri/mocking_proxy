@@ -1,0 +1,311 @@
+
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<!--<link rel="import" href="/static/elements/add-project-dialog.html">-->
+<link rel="import" href="/static/elements/common/delete-dialog.html">
+<link rel="import" href="/static/css/app-styles.html">
+
+<link rel="import" href="/static/elements/common/working-dialog.html">
+<link rel="import" href="/static/elements/common/message-dialog.html">
+<link rel="import" href="/static/elements/common/simple-slider.html">
+<link rel="import" href="/static/elements/common/check-box.html">
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/item-selector.html">
+<!--<link rel="import" href="/static/elements/project-drawer.html">-->
+<!--<link rel="import" href="/static/elements/project-sub-drawer.html">-->
+<link rel="import" href="/static/elements/code-menu.html">
+<link rel="import" href="/static/elements/object-table/link-column.html">
+<link rel="import" href="/static/elements/object-table/event-column.html">
+
+<link rel="import" href="/static/elements/common/ajax-img.html">
+
+<link rel="import" href="/static/elements/object-table/object-table.html">
+<link rel="import" href="/static/elements/object-table/select-column.html">
+<link rel="import" href="/static/elements/object-table/text-column.html">
+<link rel="import" href="/static/bower_components/pushstate-anchor/pushstate-anchor.html">
+
+<link rel="import" href="/static/local_components/page-navi.html">
+
+<link rel="import" href="/static/css/app-styles.html">
+
+<dom-module id="project-viewer">
+    <template>
+        <style include="app-styles"></style>
+        <style>
+            :host {
+                /*@apply(--layout-flex);*/
+                /*display: flex;*/
+                @apply(--layout-vertical);
+                height: 100%;
+                /*position: relative;*<link rel="import" href="/static/elements/object-table/select-column.html">
+/
+
+
+            }
+            .object-table-0{
+                /*height:500px;*/
+            }
+            .buttom_bar{
+                position: absolute;
+                bottom: 0px;
+            }
+
+            .menu_bar {
+                @apply(--layout-horizontal);
+                width: 100%;
+                height: 40px;
+                background-color: var(--code-color-list-base);
+            }
+
+            .menu_bar > .delete_button {
+                min-width: 90px;
+                margin-left: 40px;
+                margin-top: 5px;
+            }
+
+            .menu_bar > .add_button {
+                min-width: 90px;
+                margin-left: auto;
+                margin-top: 5px;
+                margin-right: 40px;
+            }
+
+
+            responsive-table {
+                height: 100%;
+            }
+
+            .list {
+                @apply(--layout-fit);
+            }
+
+
+        </style>
+
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <div class="mainContents">
+
+            <project-menu projects ="{{projects}}" current-project="{{currentProject}}" index-main-contant="{{indexMainContant}}" ></project-menu>
+            <page-navi class="pager" offset="{{recordOffset}}" limit="{{recordLimit}}" count="{{recordCount}}"></page-navi>
+
+            <div class="wrapTable">
+
+            <object-table class="list" items="{{projects}}"  selected="{{_selectedId}}" toggle manual-sort>
+                <text-column label="{{resource.name}}" path="name" align="centerr"></text-column>
+                <text-column label="{{resource.environment}}" path="environment" align="center"></text-column>
+                <text-column label="{{resource.development_project}}" text="{item.development_project}" align="center"></text-column>
+                <link-column label="{{resource.delete}}" path="id" href="/projects/{value}/delete" flex="none"></link-column>
+            </object-table>
+
+            <item-selector items="{{projects}}" item-id="{{_selectedId}}" item="{{_selectedproject}}"></item-selector>
+
+            </div>
+            <div class="footer">
+                <common-button size="B" type="accept" on-tap="_showProjectDialog">{{resource.add}}</common-button>
+            </div>
+        </div>
+
+
+        <delete-dialog id="deleteDialog"></delete-dialog>
+        <working-dialog id="workingDialog">[[workingDialogText]]</working-dialog>
+        <message-dialog id="messageDialog" mode="[[messageDialogType]]">[[messageDialogText]]</message-dialog>
+        <edit-project-dialog id="editProjectDialog"></edit-project-dialog>
+
+    </template>
+
+    <script>
+        (function () {
+
+            Polymer({
+                is: "project-viewer",
+                properties: {
+                    _selectedproject: {
+                        type: Object,
+                        observer: "_changeSelected",
+                        notify: true,
+                    },
+                    _selectedId: {
+                        type: String,
+                        value:''
+                    },
+                    _selectedOperations: {
+                        type: Object,
+                        notify: true,
+                    },
+                    container: {
+                        type: Object,
+                        observer: "_changeContainer",
+                        notify: true,
+                    },
+                    projects: {
+                        type: Array,
+                        notify: true,
+                    },
+                    _order: {
+                        type: String,
+                        notify: true,
+                    },
+                    _dir: {
+                        type: String,
+                        notify: true,
+                    },
+                    _openprojectdrawer: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    _openprojectsubdrawer: {
+                        type: Boolean,
+                        value: false,
+                    },
+                    _operations: {
+                        type: Object,
+                        notify: true,
+                    }
+                },
+                attached: function() {
+
+                    this.listen(window, 'delete-project', 'deleteProject');
+                    this._fetch();
+                },
+                detached: function() {
+
+                },
+                _openprojectDrawer: function(e, detail) {
+                    if (detail.request == 'open'){
+                        this._openprojectdrawer = true;
+                    } else {
+                        this._openprojectdrawer = false;
+                        this.selected = null;
+                    }
+                },
+                _openprojectSubDrawer: function(e, detail) {
+                    if (detail.request == 'open'){
+                        this._openprojectsubdrawer = true;
+                        this._selectedOperations = detail.selectedOperations;
+                    } else {
+                        this._openprojectsubdrawer = false;
+                    }
+                },
+                _changeContainer: function (c, old) {
+                    this.projects = null;
+                    if (c != null) {
+                        this.fire('project-drawer', {request: 'close'});
+                        this.fire('project-sub-drawer', {request: 'close'});
+                        this._getProject();
+                    }
+                },
+                _showProjectDialog: function () {
+                    var self = this;
+                    console.log("mark this.resource.ok")
+                    console.log(this.resource.ok)
+
+                    this.$.editProjectDialog.show(null, function (data) {
+                        self.push("projects", data.res);
+                    });
+                },
+                _deleteproject: function (project) {
+                    return new Promise(function(resolve, reject) {
+                        codeApi.delete("/projects/:project_id", {
+                            params: {
+                                "project_id": project.id,
+                            },
+                        }).then(function (data) {
+                            resolve(data.responce);
+                        }).catch(function (e) {
+                            reject(e);
+                        });
+                    });
+                },
+                _showprojectDeleteDialog: function (e) {
+                    var self = this;
+                    this.$.deleteDialog.show(function () {
+                                this.$.deleteDialog.close();
+                                self.workingDialogText = "please wait to delete";
+                                self.$.workingDialog.toggle();
+                                var promises = [];
+                                var targetprojects = [];
+                                self.projects.forEach(function (project) {
+                                    if(project.enabled){
+                                        promises.push(
+                                                self._deleteproject(project)
+                                        );
+                                        targetprojects.push(project);
+                                    }
+                                });
+                                Promise.all(promises).then(function () {
+                                    targetprojects.forEach(function (project) {
+                                        self.splice("projects", self.projects.indexOf(project), 1);
+                                    });
+                                    self.messageDialogType = "Success";
+                                    self.messageDialogText = this.resource.successfully_created;
+                                    self.$.messageDialog.show();
+                                }).catch(function (e) {
+//                                    console.log(e);
+                                    self.messageDialogType = "Error";
+                                    self.messageDialogText = this.resource.failed_to_create;
+                                    self.$.messageDialog.show();
+                                }).then(function () {
+                                    self.$.workingDialog.toggle();
+                                });
+                            },
+                            function () {
+                                self.$.deleteDialog.close();
+                            });
+                },
+                _checkprojectEnabled: function (projects) {
+                    if(!projects.base){
+                        return false;
+                    }
+                    var rtn = false;
+                    projects.base.forEach(function(project){
+                        if(project.enabled){
+                            rtn = true;
+                        }
+                    });
+                    return rtn;
+                },
+                _changeSelected: function (val) {
+                    var self = this;
+                    if (!val) {
+                        this.fire('project-drawer', {request: 'close'});
+                        return;
+                    }
+//                    console.log("mark 1")
+//                    console.log(this._selectedId)
+//                    console.log("mark 1.1")
+                    var url = "/projects/"+this._selectedId;
+                    this.fire('go', url);
+
+                },
+                _fetch: function() {
+//                    console.log("mark 3")
+                    var me = this;
+                    this.loading = true;
+//                    this.resource.ok
+                    codeApi.get('/projects').then(function(data) {
+                        me.projects = data.res || [];
+                        var mappedProject = me.projects.map(function(element){
+                            element.development_project = element.development_project_id == ""?"-":element.development_project_name;
+//                            console.log("mark mapping")
+//                            console.log(element)
+//                            console.log(element.development_project)
+
+                            return element;
+                        }) ;
+//                        console.log(data.res)
+//                        console.log(me.projects)
+//                        console.log("mark 4, it must tell projects")
+
+                    }).catch(function() {
+                        me.fire('notify', {type: 'error'});
+                    }).then(function(data) {
+                        me.loading = false;
+                    });
+                }
+
+            });
+        }());
+    </script>
+</dom-module>

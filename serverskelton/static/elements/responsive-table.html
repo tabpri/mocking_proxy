@@ -1,0 +1,249 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="common/ajax-img.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="responsive-table">
+
+    <style>
+        :host {
+            @apply(--layout-fit);
+            @apply(--layout-vertical);
+        }
+
+        .header-pane {
+            @apply(--layout-flex-none);
+            overflow-x: hidden;
+            overflow-y: scroll;
+        }
+
+        .body-pane {
+            @apply(--layout-flex-auto);
+            overflow-x: hidden;
+            overflow-y: scroll;
+        }
+
+        .header-overlay {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 30px;
+            width: 24px;
+            background-color: #333;
+            pointer-events: none;
+        }
+
+        .table {
+            display: table;
+            background-color: #fff;
+            width: 100%;
+            height: 100%;
+            table-layout: fixed
+        }
+
+        .cols {
+            display: table-column-group;
+        }
+
+        .col {
+            display: table-column;
+        }
+
+        .col[selected] {
+            background-color: #f2f2f2;
+        }
+
+        .header {
+            display: table-header-group;
+        }
+
+        .rows {
+            display: table-row-group;
+        }
+
+        .titles {
+            display: table-row;
+            height: 30px;
+        }
+
+        .body-pane .titles {
+            height: 0;
+        }
+
+        .rows ::content > .row {
+            display: table-row;
+            height: 34px;
+            color: #333;
+        }
+
+        .rows ::content > .row + .row > * {
+            border-top: #eaeaea 1px solid;
+        }
+
+        .rows ::content > .row[sub-selected] {
+            background-color: #cae4ea;
+        }
+
+        .rows ::content > .row[selected] {
+            background-color: #0071bc;
+            color: #fff;
+        }
+
+        .titles .title,
+        .rows ::content > .row > * {
+            display: table-cell;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .rows ::content > .row > * {
+            font-size: 12px;
+            padding: 0 5px;
+            line-height: 1;
+        }
+
+        .rows ::content > .row > [no-padding] {
+            padding: 0;
+        }
+
+        .rows ::content > .row > [left] {
+            text-align: left;
+        }
+
+        .titles .title {
+            background-color: #333;
+            color: #999;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .titles .title:not([order]) {
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .title .name-container {
+            @apply(--layout-horizontal);
+            @apply(--layout-center-center);
+            overflow: hidden;
+        }
+
+        .title .name {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .title .dir {
+            @apply(--layout-flex-none);
+            margin-left: 3px;
+        }
+
+        .title .dir .icon {
+            width: 10px;
+            height: 10px;
+        }
+
+        .title .dir .icon.unselect {
+            height: 20px;
+        }
+
+        .titles .title:not([selected]) .dir .asc,
+        .titles .title:not([selected]) .dir .desc,
+        .titles .title[selected] .dir .unselect {
+            display: none;
+        }
+    </style>
+
+    <template>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <div class="header-pane">
+            <div class="table">
+                <div class="header">
+                    <iron-selector class="titles" attr-for-selected="order" selected-attribute="selected" selected="{{order}}">
+                        <template is="dom-repeat" items="{{titles}}">
+                            <div class="title" order$="{{item.order}}" on-tap="_selectTitle" style$="width:{{item.width}}">
+                                <div class="name-container">
+                                    <span class="name">{{item.name}}</span>
+                                    <div class="dir" hidden$="[[!item.order]]">
+                                        <ajax-img class="icon unselect" src="/front/static/img/icn-global_sort.svg"></ajax-img>
+                                        <ajax-img class="icon asc" src="/front/static/img/icn-arrow4_up.svg" hidden$="[[!_eq(dir, 'asc')]]"></ajax-img>
+                                        <ajax-img class="icon desc" src="/front/static/img/icn-arrow4_down.svg" hidden$="[[!_eq(dir, 'desc')]]"></ajax-img>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </iron-selector>
+                </div>
+            </div>
+        </div>
+        <div class="header-overlay"></div>
+        <div class="body-pane">
+            <div class="table">
+                <div class="cols">
+                    <template is="dom-repeat" items="{{titles}}">
+                        <div class="col" selected$="{{_eq(item.order, order)}}"></div>
+                    </template>
+                </div>
+                <div class="header">
+                    <div class="titles">
+                        <template is="dom-repeat" items="{{titles}}">
+                            <div class="title" style$="width:{{item.width}}"></div>
+                        </template>
+                    </div>
+                </div>
+                <iron-selector class="rows" attr-for-selected="value" selected-attribute="selected" selected="{{selected}}" on-tap="_selectRow">
+                    <content select=".row"></content>
+                </iron-selector>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'responsive-table',
+
+            properties: {
+                query: Object,
+                titles: Array,
+                order: {
+                    type: String,
+                    notify: true,
+                },
+                dir: {
+                    type: String,
+                    notify: true,
+                },
+                selected: {
+                    type: String,
+                    notify: true,
+                }
+            },
+
+            _selectRow: function() {
+                var old = this.selected;
+                this.async(function() {
+                    if (old == this.selected)
+                        this.selected = '';
+                }, 1);
+            },
+
+            _selectTitle: function(e) {
+                var title = e.model.item;
+                if (this.order == title.order) {
+                    this.dir = (this.dir == 'asc') ? 'desc' : 'asc';
+                }
+            },
+
+            _eq: function(a, b) {
+                return a == b;
+            }
+        });
+    </script>
+
+</dom-module>

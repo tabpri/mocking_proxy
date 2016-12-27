@@ -1,0 +1,298 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="/static/elements/common/common-button.html">
+<link rel="import" href="/static/elements/common/button-dialog.html">
+<link rel="import" href="/static/elements/common/drop-down.html">
+<link rel="import" href="/static/elements/common/flex-label.html">
+<link rel="import" href="/static/elements/common/working-dialog.html">
+<link rel="import" href="/static/local_components/i18n-data/i18n-data.html">
+
+<dom-module id="edit-project-dialog">
+        <template>
+        <style>
+            button-dialog {
+                --button-dialog-overflow: auto;
+            }
+
+            drop-down .dropdown-content{
+                color: var(--code-color-font-gray);
+                background-color: white;
+            }
+
+            flex-label {
+                padding-left: 5px;
+            }
+
+            .imageList {
+                color: var(--code-color-font-gray);
+                background-color: white;
+            }
+
+            .imageLabel {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+
+            .imageLabel .imageName{
+                @apply(--layout-flex);
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                padding-left: 5px;
+            }
+
+             drop-down {
+                --drop-down-dropdown-button: {
+                    border: solid 1px var(--code-color-border);
+                    box-sizing: border-box;
+                }
+                --drop-down-dropdown-button-no-event: {
+                    border: solid 1px var(--code-color-border);
+                    border-bottom: none;
+                }
+            }
+
+            .horizontal {
+                @apply(--layout-horizontal);
+            }
+
+            .radio-label {
+                @apply(--layout-center);
+            }
+
+            .radio-label input {
+                display: none;
+            }
+
+            .radio-label label {
+                display: block;
+                width: 16px;
+                height: 16px;
+                margin-right: 10px;
+            }
+
+            .radio-label label + div {
+                margin-right: 20px;
+            }
+
+            .radio-label input[type=radio] + label {
+                background-size: contain;
+                background-image: url(/static/img/icn-global_radio-off.svg);
+            }
+
+            .radio-label input[type=radio]:checked + label{
+                background-size: contain;
+                background-image: url(/static/img/icn-global_radio-on.svg);
+            }
+
+            .drop-arrow {
+                width: 16px;
+                height: 16px;
+                margin-left: 5px;
+                margin-right: 5px;
+            }
+
+            .dialog-legend {
+                margin-top: 5px;
+            }
+
+            .dialog-field {
+                margin: 5px 0px;
+            }
+
+            flex-label {
+                --flex-label-font-size: 12px;
+                --flex-label-height: 24px;
+                --flex-label-line-height: 24px;
+            }
+
+            [vanish] {
+                display: none;
+            }
+        </style>
+        <i18n-data value="{{resource}}"></i18n-data>
+
+        <working-dialog id="workingDialog">[[workingDialogMessage]]</working-dialog>
+
+        <button-dialog id="mainDialog">
+            <div class="dialog-title">[[_title]]</div>
+            <div class="dialog-body">
+                <div class="dialog-fieldset">
+                    <div class="dialog-field" vanish$="{{!_isBrankObject(_project)}}">
+                        <div class="horizontal">
+                            <label class="horizontal radio-label cursor-pointer">
+                                <input id="typeLambda" type="hidden" name="projectType" value="[[_CONST.PROJECT_TYPE.LAMBDA]]" on-tap="selectRadioChange">
+                            </label>
+
+                        </div>
+                    </div>
+                    <div class="dialog-field" vanish$="{{_isBrankObject(_project)}}">
+                        [[_project.type]]
+                    </div>
+                </div>
+
+
+                <div class="dialog-fieldset">
+                    <div class="dialog-legend">{{resource.name}}</div>
+                    <div class="dialog-field">
+                        <input type="text" class="name" value="{{_name::input}}">
+                    </div>
+                    <validate-group class="inputError" invalid="{{invalid}}">
+                        <validate-strings value="{{_name}}" input-value="{{_name}}"></validate-strings>
+                    </validate-group>
+                </div>
+
+            </div>
+            <div class="buttonArea">
+                <common-button size="B" type="cancel" on-tap="close">{{resource.cancel}}</common-button>
+                <common-button size="B" type="accept" on-tap="_createProject" disabled$={{!_checkAnd(invalid,_name)]] vanish$="{{!_isBrankObject(_project)}}">{{resource.ok}}</common-button>
+                <common-button size="B" type="accept" on-tap="_editProject" disabled$={{!_checkAnd(invalid,_name)}} vanish$="{{_isBrankObject(_project)}}">{{resource.ok}}</common-button>
+            </div>
+        </button-dialog>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: "edit-project-dialog",
+                properties: {
+                    container: {
+                        type: Object
+                    },
+                    callbackApiSuccessed: {
+                        type: Function,
+                        value: function (data) {
+//                            console.log(data);
+                        }
+                    },
+                    callbackCancel: {
+                        type: Function
+                    },
+                    _project: {
+                        type: Object,
+                        value: function () {
+                            return {};
+                        }
+                    },
+                    _CONST: {
+                        type: Object,
+                        value: CONST,
+                        readOnly: true
+                    }
+                },
+                show: function (project, callbackApiSuccessed) {
+                    var self = this;
+                    if (typeof callbackApiSuccessed == "function"){
+                        this.callbackApiSuccessed = callbackApiSuccessed;
+                    }
+                    if(project){
+                        this.set("_project", project);
+                        this._title = this.resource.edit_project;
+                        this._type = this._project.type;
+//                        self._baseImage = "";
+                        this._name = this._project.name;
+//                        this._discription = this._project.description;
+                        self.$.mainDialog.open();
+                    } else {
+                        var self = this;
+                        this._getBaseImages().then(function (data) {
+                            self.set("_project", {});
+                            self._title = self.resource.add_project;
+                            self.$.typeLambda.click();
+                            self._baseImage = "";
+                            self._name = "";
+                            self._discription = "";
+                            self.$.mainDialog.open();
+                        }).catch(function (e) {
+                            console.log(e);
+                        });
+                    }
+                },
+                close: function () {
+                    this.$.mainDialog.close()
+                },
+                _getBaseImages: function () {
+                    var self = this;
+                    return new Promise(function(resolve, reject) {
+                        codeApi.get("/base_images", {}).then(function (data) {
+                            self._base_images = data.res;
+                            resolve();
+                        }).catch(function (e) {
+                            reject(e);
+                        });
+                    });
+                },
+                _createProject: function () {
+                    var self = this;
+                    console.log("mark 1")
+                    this.workingDialogMessage = this.resource.workingDialogMessage;
+
+                    this.$.workingDialog.toggle();
+//                    api.get("/context").then(function (data) {
+                    api.get("/context", {"version":""}).then(function (data) {
+//                    api.get("/context", {"origin":"http://localhost:3000","version":""}).then(function (data) {
+                        return codeApi.post('/projects', {
+                            body: {
+                                name: self._name,
+//                                docker_id: self._baseImage.docker_id,
+                                base_image_tag: "code_baseimage",
+//                                type: self._type,
+                                type: "lambda",
+                                description: "-",
+                                owner_id: data.current_user.id,
+//                                owner_id: "xF87X7X2Bycd0IlihLkJ6F3GCDRQcIPeivLb6aEm2cGlUMYqJYqttsvD2Jcv3opS",
+                            }
+                        });
+                    }).then(this.callbackApiSuccessed
+                    ).catch(function (e) {
+// @todo
+                    }).then(function () {
+                        self.$.workingDialog.toggle();
+                        self.$.mainDialog.close()
+
+                    });
+                },
+                _editProject: function (e) {
+                    var self = this;
+                    codeApi.patch("/projects/:project_id", {
+                        params: {
+                            project_id: self._project.id,
+                        },
+                        body: {
+                            name: self._name,
+                            description: "-",
+                        }
+                    }).then(this.callbackApiSuccessed
+                    ).catch(function (e) {
+                        console.log(e);
+                    }).then(function () {
+                        self.$.mainDialog.close()
+                    });
+                },
+//                selectRadioChange: function (e) {
+//                    this._type = e.target.value;
+//                },
+                _selectImage: function (e) {
+                    this._baseImage = e.model.item;
+                },
+                _sort: function(a,b) {
+                    var aLow = a.name.toLowerCase();
+                    var bLow = b.name.toLowerCase();
+                    if( aLow < bLow ) return -1;
+                    if( aLow > bLow ) return 1;
+                    return 0;
+                },
+                _checkAnd: function(invalid){
+                    return !invalid && [].slice.call(arguments, 1).some(Boolean);
+                },
+                _isBrankObject: function (obj) {
+                    if(Object.keys(obj).length){
+                        return false;
+                    }
+                    return true;
+                },
+            });
+        }());
+    </script>
+</dom-module>

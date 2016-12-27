@@ -1,0 +1,79 @@
+<link rel="import" href="/static/css/base-styles.html">
+<dom-module id="app-styles">
+  <template>
+    <style include="base-styles"></style>
+    <style>
+        :host {
+            --size-navigation-bar-heigth: 50px;
+            --size-footer-bar-heigth: 80px;
+
+            --size-main-contents-margin: 15px;
+            
+            --color-theme-app: var(--color-theme-developer-center);
+            --color-theme-app-dark: #7c3515;
+            --color-theme-app-light: #ffca6c;
+            --color-bg-main-view: var(--color-bg-color-light-gray);
+        }
+        
+        .mainView {
+            background-color: var(--color-bg-color-black);
+            height: 100%;
+            min-height: 200px;
+
+          flex:1;
+
+        }
+        
+        .mainContents {
+            @apply(--layout-flex);
+            @apply(--layout-vertical);
+            position: relative;
+          flex:1;
+        }
+        
+        .mainBody {
+            @apply(--layout-flex);
+            position: relative;
+            padding-top: var(--size-main-contents-margin);
+            padding-bottom: 0px;
+            padding-left: var(--size-main-contents-margin);
+            padding-right: var(--size-main-contents-margin);
+            background-color: var(--color-bg-main-view);
+            overflow-y: auto;
+        }
+
+        .wrapTable {
+            @apply(--layout-flex);
+            position: relative;
+        }
+        
+        object-table {
+            @apply(--layout-fit);
+        }
+        
+        .footer {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+            height: var(--size-footer-bar-heigth);
+            margin-left: auto;
+            margin-right: var(--size-main-contents-margin);
+        }
+
+        common-button + common-button {
+            margin-left: 10px;
+        }
+        
+        a {
+            text-decoration:none;
+            color: inherit;
+            cursor: pointer;
+        }
+        
+        .search,
+        .pager {
+            margin-left: 10px;
+        }
+
+    </style>
+  </template>
+</dom-module>
