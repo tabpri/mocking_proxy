@@ -33,9 +33,20 @@ curl localhost/kernel/context などで開発サーバ（https://gomphrena-api.o
 1. docker run そのイメージ
 
 #### ユースケース：
-バックエンドの開発状況に問題あり、試験できない。フロントエンド開発チームなどで共通的に依存するapiの準備状況に応じ、誰かがproxy/mockのルールのバージョン設定を作る。"docker run そのimage" で他のメンバーがプロキシで用いる。
+バックエンドの開発状況に問題あり、試験できないとき：
+フロントエンド開発チームなどで共通的に依存するapiの準備状況に応じてdocker imageを作る。
+誰かがproxy/mockのルールのバージョン設定を作り、 → "docker run そのimage" で他のメンバーがプロキシで用いる。
 
-#### 手元で復数のmock/proxyを切り替える場合：
+
+#### 手元で復数のmock/proxyを切り替える：
 1. docker stop そのプロキシ
 2. docker start 別の設定のプロキシ
 あるいは復数のポートでプロキシーごと起動しておき、アプリで切り替える
+
+
+
+
+## Build
+```
+docker build . -t registry.local:5050/ourproxy
+```

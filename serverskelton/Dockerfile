@@ -1,4 +1,4 @@
-From ournodejs:latest
+From ubuntu:14.04
 
 WORKDIR /opt/app
 

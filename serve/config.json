@@ -1,0 +1,23 @@
+{
+  "approval": false,
+  "authz_endpoint": "https://gomphrena-api.optim-test.com/oauth2/authorize",
+  "client_id": "admin_master",
+  "client_secret": "BQ9KMCbP0eSBbS4aFWqeuXPbnS9BuUPE0hlFbSXaLzyr5gwxdkdk2IPZ1GLLtl6RzxH7ibDokX77t6NA3eQQ97EIV83Wc0rkTLVVfsCjl7PEWfDO1ggwlFnRUEPKyoadIxIvY2PlSDMo5yfz7LScvaCOtenz3cMzRIkDIv56GChgvEo4gua4udVBFVssVS5iWm3MYR2Rz3CfdayQUzADmpgDx38EIa2vyuKAJ1A2eiBWlrWU4uwNeCh3fORaE8KC",
+  "logout_endpoint": "https://gomphrena-api.optim-test.com/logout",
+  "oauth_state": "dummy",
+  "port": "8082",
+  "redirect_url": "http://localhost:8082/oauth2/callback",
+  "session_name": "zj9swj0g",
+  "token_endpoint": "https://gomphrena-api.optim-test.com/oauth2/token",
+  "statics": [
+    "/static/"
+  ],
+  "headers": [
+    {
+      "X-FRAME-OPTIONS": "DENY"
+    },
+    {
+      "KEY": "VALUE"
+    }
+  ]
+}

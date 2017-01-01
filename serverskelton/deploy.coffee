@@ -10,6 +10,9 @@ deploy_config_file_dir=svn_base+"/deploy/geranium.optim-test.com/geranium.optim-
 docker_build_url="http://jenkins.tokyo.optim.co.jp/job/docker-iot_platform-step3-front-overhall/"
 cloud_os_core_apps_front_deploy_jenkins_url="http://jenkins.tokyo.optim.co.jp/job/deploy-geranium.optim-test.com/"
 
+
+
+
 echo " # making into a deplyeable zip file into the svn_build_dir"
 cd build_target_dir
 exec "zip -r " + source_code_zip_file + " ."

@@ -1,0 +1,9 @@
+#!/usr/bin/env coffee
+require('shelljs/global')
+echo "running the server"
+
+# registry_proxy_command = "docker build -t  "
+# exec registry_proxy_command
+cd "./bin"
+command = "docker-compose up"
+exec command

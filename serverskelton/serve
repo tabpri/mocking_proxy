@@ -1,6 +1,0 @@
-#!/usr/bin/env coffee
-require('shelljs/global')
-echo "running the server"
-cd "./bin"
-command = "docker-compose up"
-exec command
