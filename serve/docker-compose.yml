@@ -1,18 +1,26 @@
-ourproxy:
-  image: registry.local:5050/ourproxy:latest
-  ports:
-    - "80:80"
-  links:
-    - ourjsonserver
-
-ourjsonserver:
-    image: registry.local:5050/ourjsonserver:latest
-    ports:
-        - "3000:3000"
-
 serverskelton:
     image: registry.local:5050/serverskelton:latest
     ports:
         - "8081:8081"
     volumes:
         - /Users/toukubo/mocking_proxy/serverskelton:/opt/app
+
+ourjsonserver:
+    image: registry.local:5050/ourjsonserver:latest
+    ports:
+        - "3000:3000"
+
+ourproxy:
+  image: registry.local:5050/ourproxy:latest
+  ports:
+    - "80:8080"
+  links:
+    - artifactsproxy
+
+
+artifactsproxy:
+  image: registry.local:5050/artifactsproxy:latest
+  ports:
+    - "8080:8080"
+  links:
+    - ourjsonserver

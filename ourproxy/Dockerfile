@@ -1,25 +1,25 @@
 FROM ubuntu:14.04
 
-# based on this : https://github.com/dockerfile/nginx
+FROM nginx:mainline
 
-RUN apt-get update --force-yes
-RUN apt-get install software-properties-common -y
+ENV SUPERVISOR_VERSION 3.3.0
 
-# Install Nginx.
-RUN \
-  add-apt-repository -y ppa:nginx/stable && \
-  apt-get update && \
-  apt-get install -y nginx && \
-  rm -rf /var/lib/apt/lists/* && \
-  echo "\ndaemon off;" >> /etc/nginx/nginx.conf && \
-  chown -R www-data:www-data /var/lib/nginx
+RUN set -x \
+    && apt-get update && apt-get install --no-install-recommends -yqq \
+    dnsmasq \
+    wget \
+    python-setuptools \
+    && wget https://github.com/Supervisor/supervisor/archive/${SUPERVISOR_VERSION}.tar.gz \
+    && tar -xvf ${SUPERVISOR_VERSION}.tar.gz \
+    && cd supervisor-${SUPERVISOR_VERSION} && python setup.py install \
+    && apt-get clean autoclean && apt-get autoremove -y \
+&& rm -rf /var/lib/apt/lists/*
 
-COPY proxy.conf /etc/nginx/sites-enabled/proxy.conf
+COPY supervisord.conf /etc/supervisord.conf
 
-
-WORKDIR /etc/nginx
-CMD ["nginx"]
-
-# Expose ports.
-EXPOSE 80
+EXPOSE 8080
 EXPOSE 443
+
+COPY proxy.conf /etc/nginx/conf.d/proxy.conf
+
+CMD ["supervisord", "-n"]
