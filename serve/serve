@@ -4,6 +4,6 @@ echo "running the server"
 
 # registry_proxy_command = "docker build -t  "
 # exec registry_proxy_command
-cd "./bin"
+# cd "./bin"
 command = "docker-compose up"
 exec command
