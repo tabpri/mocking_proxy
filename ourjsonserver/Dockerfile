@@ -1,15 +1,14 @@
-FROM ubuntu:14.04
-MAINTAINER Thom Nichols "thom@thomnichols.org"
+FROM node:6
 
-ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update
-RUN apt-get -qq update
-RUN apt-get install -y nodejs npm
+
+#RUN apt-get update
+#RUN apt-get -qq update
+#RUN apt-get install -y nodejs npm
 # TODO could uninstall some build dependencies
 
 # fucking debian installs `node` as `nodejs`
-RUN update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
+#RUN update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
 RUN npm install -g json-server
 
 # VOLUME ["/data"]
